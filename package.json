@@ -2,10 +2,22 @@
   "name": "ci102",
   "version": "0.0.1",
   "description": "Chess royale project",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev:client": "parcel watch --no-cache --log-level warn client/index.html",
+    "dev:server": "nodemon --quiet --watch server --watch common server/index.js",
+    "dev": "concurrently -k -p \"[{name}/{time}]\" -n \"server,client\" -c \"blue.bold,yellow.bold\" \"npm run dev:server\" \"npm run dev:client\""
   },
   "author": "Harper Davis, Cristobal Cantu, Duc Phan, Minh Pham",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9",
+    "parcel": "^2.13.3",
+    "socket.io-client": "^4.8.1"
+  }
 }
