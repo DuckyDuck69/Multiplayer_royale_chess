@@ -1,1 +1,1 @@
-console.log("Hello from test.js!"); //wassupp
+console.log("Hello from test.js!"); // hello
