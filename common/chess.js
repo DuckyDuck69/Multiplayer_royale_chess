@@ -31,6 +31,12 @@ const MoveType = {
 const ORTHOGONAL = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 const DIAGONAL = [[1, 1], [-1, 1], [-1, -1], [1, -1]];
 const KNIGHT = [[2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2], [1, 2]];
+
+const DEFAULT_LAYOUT = [PieceType.Rook, PieceType.Knight, PieceType.Bishop, PieceType.Queen, PieceType.King, PieceType.Bishop, PieceType.Knight, PieceType.Rook];
+
+export const BLACK_OWNER = 1;
+export const WHITE_OWNER = 0;
+
 export class State {
 
     constructor(width = 16, height = 16) {
@@ -39,6 +45,24 @@ export class State {
 
         this.board = new Board();
         this.pieces = [];
+    }
+
+    static default() {
+        const state = new State(8, 8);
+
+        for (let i = 0; i < 8; i += 1) {
+            state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 0, BLACK_OWNER));
+            state.pieces.push(new Piece(PieceType.Pawn, i, 1, BLACK_OWNER));
+            state.pieces.push(new Piece(PieceType.Pawn, i, 6, WHITE_OWNER));
+            state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 7, WHITE_OWNER));
+        }
+
+        return state;
+    }
+
+    allMovesFor(owner) {
+        return this.pieces.filter(p => p.owner === owner)
+            .flatMap(p => this.pieceMoves(p));
     }
 
     // Get piece at x and y coordinates
@@ -92,16 +116,25 @@ export class State {
                 ];
             }
             case PieceType.Knight: {
-                return KNIGHT.flatMap(([dx, dy]) => this.pieceCanMoveTo(piece.owner, piece.x + dx, piece.y + dy));
+                return KNIGHT.map(([dx, dy]) => {
+                    const [x, y] = [piece.x + dx, piece.y + dy];
+                    const moveType = this.pieceCanMoveTo(piece.owner, x, y);
+                    if (moveType !== MoveType.None) {
+                        return new Move(piece, x, y);
+                    } else {
+                        return null;
+                    }
+                }).filter(p => p);
             }
         }
     }
 
-    // recursive function for piece movement
+
+
     calculateLineMoves(piece, dx, dy, maxDistance = 8, captureMode = CaptureMode.Any) {
         let distance = 1;
         const moves = [];
-        while (distance < maxDistance) {
+        while (distance <= maxDistance) {
             const [x, y] = [piece.x + dx * distance, piece.y + dy * distance];
             const moveType = this.pieceCanMoveTo(piece.owner, x, y);
 
@@ -115,6 +148,7 @@ export class State {
             if (moveType !== MoveType.Move) {
                 return moves;
             }
+            distance += 1;
         }
         return moves;
     }
@@ -139,6 +173,10 @@ export class Move {
         this.y = y;
     }
 
+    toString() {
+        return `${Piece.name(this.piece.type)}${String.fromCharCode(97 + this.x)}${this.y + 1}`;
+    }
+
 }
 
 export class Piece {
@@ -155,6 +193,18 @@ export class Piece {
         // Piece tags representing state, i.e. "canEnPassant" or "canCastle"
         this.tags = [];
     }
+
+    static name(pieceType) {
+        switch (pieceType) {
+            case PieceType.Rook: return 'R';
+            case PieceType.Bishop: return 'B';
+            case PieceType.Queen: return 'Q';
+            case PieceType.King: return 'K';
+            case PieceType.Pawn: return '';
+            case PieceType.Knight: return 'N';
+        }
+        return '?';
+    } 
 
     getX() {
         return this.x;
