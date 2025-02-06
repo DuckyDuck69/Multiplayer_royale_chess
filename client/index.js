@@ -17,40 +17,21 @@ socket.on("connect", () => {
     console.log(`${socket.id} connected!`);
 });
 
-
-// This will be called when a new value is recieved.
-socket.on("value", (value) => {
-    console.log(`Recieved value: ${value}`);
-    document.getElementById('number').innerText = `The number is currently: ${value}`;
-});
-
-// When the send message button is clicket, call this function
-document.getElementById("sendMessage").addEventListener("click", () => {
-    // Get the message from the text box
-    const message = document.getElementById("message").value || "";
-    
-    // Emit a "message" packet. The socket.emit function takes two arguments,
-    // firstly, the argument name, and then the message data which can be anything,
-    // and can be read by the server.
-    socket.emit("message", message);
-});
-
-// When the increment number button is clicked, call this function
-document.getElementById("incrementNumber").addEventListener("click", () => {
-    socket.emit("increment", { by: INCREMENT });
-});
-
-
 const myCanvas = document.getElementById("chessBoard");
 const ctx = myCanvas.getContext("2d");
-myCanvas.width = 1600;
-myCanvas.height = 1600;
-
+const devicePixelRatio = window.devicePixelRatio || 1; //get the ratio of any display 
+const displayWidth = 880;
+const displayHeight = 880;
+myCanvas.width = displayWidth * devicePixelRatio;  //canvas resolution 
+myCanvas.height = displayHeight * devicePixelRatio;
+myCanvas.style.width = displayWidth + 'px';  //scale canvas height + width 
+myCanvas.style.height = displayHeight + 'px';
+ctx.scale(devicePixelRatio, devicePixelRatio); //scale according to the API value, in this case 2  //so it scale by a value of 200%
 let grid = [];
 let columns = 16;
 let rows = 16;
 
-let size = Math.floor(myCanvas.height / columns);  //calculate the size of each square
+let size = (displayHeight / columns);  //calculate the size of each square
 
 //create a Cell object, which can be assigned method for later use
 function Cell(x, y){                        
