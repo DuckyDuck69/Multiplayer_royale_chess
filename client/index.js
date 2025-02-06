@@ -3,7 +3,8 @@ import { io } from "socket.io-client";
 
 // This imports the INCREMENT value from the /common/chess.js file. Files in the
 // /common directory should be accessible from both the client and server.
-import { INCREMENT } from "../common/chess";
+import { BLACK_OWNER, INCREMENT, State } from "../common/chess";
+
 
 console.log("Hello from the browser!");
 console.log(`The increment is: ${INCREMENT}`);
@@ -43,6 +44,24 @@ document.getElementById("incrementNumber").addEventListener("click", () => {
 
 const myCanvas = document.getElementById("chessBoard");
 const ctx = myCanvas.getContext("2d");
+const state = State.default();
+const pieceNames = ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king'];
+const whitePieceImgs = pieceNames.map(name => 'textures/light_' + name + '.png')
+    .map(path => {
+        const image = new Image();
+        image.src = path;
+        return image;
+    });
+const blackPieceImgs = pieceNames.map(name => 'textures/dark_' + name + '.png')
+    .map(path => {
+        const image = new Image();
+        image.src = path;
+        return image;
+    });
+
+console.log(whitePieceImgs)
+
+console.log(state);
 myCanvas.width = 1600;
 myCanvas.height = 1600;
 
@@ -67,6 +86,7 @@ function Cell(x, y){
 window.addEventListener('load', function() {   //draw the board after the html/css load
     createGrid();
     colorBoard();
+    drawPieces();
 })
 
 function createGrid(){
@@ -86,6 +106,17 @@ function colorBoard(){
             grid[i].show('#F5DCE0');    //Since grid[i] is a Cell object, we can use the show() method
         } else {
             grid[i].show('#E18AAA');
+        }
+    }
+}
+
+function drawPieces(){
+    for(const piece of state.pieces){
+        if(piece.owner===BLACK_OWNER){
+            ctx.drawImage(blackPieceImgs[piece.type],piece.x*size,piece.y*size,size,size)
+        }
+        else {
+            ctx.drawImage(whitePieceImgs[piece.type],piece.x*size,piece.y*size,size,size)
         }
     }
 }
