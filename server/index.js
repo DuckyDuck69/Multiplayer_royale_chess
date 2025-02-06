@@ -4,7 +4,7 @@ import express from "express";
 import http from "http";
 
 // We also import the increment value from the common code.
-import { INCREMENT } from "../common/chess.js";
+import { INCREMENT, State } from "../common/chess.js";
 
 // This is how to import a specific item from a javascript module. Similar to
 // `from x import y` in python.
@@ -102,4 +102,4 @@ server.listen(PORT, () => {
     // a ${} to have any variable concatenated into the string. It is similar to an
     // f-string in python.
     console.log(`Server started at: http://localhost:${PORT}`);
-})
+});
