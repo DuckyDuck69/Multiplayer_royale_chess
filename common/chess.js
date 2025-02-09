@@ -1,5 +1,6 @@
 import Board from './board.js';
 import Move, { MoveType } from './move.js';
+import Obstacle, { ObstacleType } from './obstacle.js';
 import Piece, { PieceType } from './piece.js';
 
 export const INCREMENT = 1;
@@ -42,6 +43,9 @@ export default class State {
             state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 7, WHITE_OWNER));
         }
 
+        state.board.addObstacle(Obstacle.wall(7, 10));
+        state.board.addObstacle(Obstacle.mud(0, 10));
+
         return state;
     }
 
@@ -63,6 +67,13 @@ export default class State {
         const at = this.pieceAt(x, y);
         if (x < 0 || y < 0 || x >= this.width || y >= this.height) {
             return MoveType.None;
+        }
+        const obstacles = this.board.obstaclesAt(x, y);
+        if (obstacles.some(o => o.getType() === ObstacleType.Wall)) {
+            return MoveType.None;
+        }
+        if (obstacles.some(o => o.getType() === ObstacleType.Mud)) {
+            return MoveType.Capture;
         }
         if (at) {
             if (at.owner === owner) {

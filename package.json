@@ -6,7 +6,8 @@
   "scripts": {
     "dev:client": "parcel watch --no-cache --log-level warn client/index.html",
     "dev:server": "nodemon --quiet --watch server --watch common server/index.js",
-    "dev": "concurrently -k -p \"[{name}/{time}]\" -n \"server,client\" -c \"blue.bold,yellow.bold\" \"npm run dev:server\" \"npm run dev:client\""
+    "dev": "concurrently -k -p \"[{name}/{time}]\" -n \"server,client\" -c \"blue.bold,yellow.bold\" \"npm run dev:server\" \"npm run dev:client\"",
+    "test:chess": "node tests/chess.js"
   },
   "author": "Harper Davis, Cristobal Cantu, Duc Phan, Minh Pham",
   "license": "MIT",

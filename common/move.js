@@ -1,5 +1,8 @@
 // MoveType.None: The piece cannot move here
 // MoveType.Move: The piece can move here
+
+import Piece from "./piece.js";
+
 // MoveType.Capture: The piece can move here but cannot go further
 export const MoveType = {
     None: 0,

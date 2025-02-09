@@ -5,4 +5,16 @@ export default class Board {
         this.obstacles = obstacles;
     }
 
+    addObstacle(obstacle) {
+        this.obstacles.push(obstacle);
+    }
+
+    obstaclesAt(x, y) {
+        return this.obstacles.filter(o => x >= o.getX() 
+                && y >= o.getY() 
+                && x < o.getX() + o.getWidth() 
+                && y < o.getY() + o.getHeight()
+            );
+    }
+
 }
