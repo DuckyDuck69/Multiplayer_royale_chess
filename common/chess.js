@@ -1,14 +1,8 @@
-export const INCREMENT = 1;
+import Board from './board.js';
+import Move, { MoveType } from './move.js';
+import Piece, { PieceType } from './piece.js';
 
-// Different types of pieces in the game to determine movesets
-export const PieceType = {
-    Pawn: 0,
-    Knight: 1,
-    Bishop: 2,
-    Rook: 3,
-    Queen: 4,
-    King: 5,
-};
+export const INCREMENT = 1;
 
 // A pawn can only capture diagonally and only move orthogonally, this could be
 // applied to other future pieces as well
@@ -17,15 +11,6 @@ const CaptureMode = {
     OnlyCapture: 1,
     OnlyMove: 2,
 }
-
-// MoveType.None: The piece cannot move here
-// MoveType.Move: The piece can move here
-// MoveType.Capture: The piece can move here but cannot go further
-const MoveType = {
-    None: 0,
-    Move: 1,
-    Capture: 2,
-};
 
 // Vectors for each of the types of movement
 const ORTHOGONAL = [[0, 1], [1, 0], [0, -1], [-1, 0]];
@@ -37,7 +22,7 @@ const DEFAULT_LAYOUT = [PieceType.Rook, PieceType.Knight, PieceType.Bishop, Piec
 export const BLACK_OWNER = 1;
 export const WHITE_OWNER = 0;
 
-export class State {
+export default class State {
 
     constructor(width = 16, height = 16) {
         this.width = width;
@@ -48,7 +33,7 @@ export class State {
     }
 
     static default() {
-        const state = new State(8, 8);
+        const state = new State();
 
         for (let i = 0; i < 8; i += 1) {
             state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 0, BLACK_OWNER));
@@ -151,75 +136,6 @@ export class State {
             distance += 1;
         }
         return moves;
-    }
-
-}
-
-// Holds state about the board such as obstacles (portals? walls?)
-export class Board {
-
-    constructor(obstacles = []) {
-        this.obstacles = obstacles;
-    }
-
-}
-
-// Class to represent a single move
-export class Move {
-
-    constructor(piece, x, y) {
-        this.piece = piece;
-        this.x = x;
-        this.y = y;
-    }
-
-    toString() {
-        return `${Piece.name(this.piece.type)}${String.fromCharCode(97 + this.x)}${this.y + 1}`;
-    }
-
-}
-
-export class Piece {
-
-    constructor(type, x, y, owner) {
-        // The type of the piece (an integer representing the PieceType above)
-        this.type = type;
-        // Position of the piece on the board (integer)
-        this.x = x;
-        this.y = y;
-        // Owner index (integer)
-        this.owner = owner;
-
-        // Piece tags representing state, i.e. "canEnPassant" or "canCastle"
-        this.tags = [];
-    }
-
-    static name(pieceType) {
-        switch (pieceType) {
-            case PieceType.Rook: return 'R';
-            case PieceType.Bishop: return 'B';
-            case PieceType.Queen: return 'Q';
-            case PieceType.King: return 'K';
-            case PieceType.Pawn: return '';
-            case PieceType.Knight: return 'N';
-        }
-        return '?';
-    } 
-
-    getX() {
-        return this.x;
-    }
-
-    getY() {
-        return this.y;
-    }
-
-    getType() {
-        return this.type;
-    }
-
-    getOwner() {
-        return this.owner;
     }
 
 }
