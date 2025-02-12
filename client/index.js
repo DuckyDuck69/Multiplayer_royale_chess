@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 
 // This imports the INCREMENT value from the /common/chess.js file. Files in the
 // /common directory should be accessible from both the client and server.
-import { BLACK_OWNER, INCREMENT, State } from "../common/chess";
+import State, { BLACK_OWNER, INCREMENT } from "../common/chess";
 
 
 console.log("Hello from the browser!");

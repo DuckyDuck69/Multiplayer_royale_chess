@@ -4,7 +4,7 @@ import express from "express";
 import http from "http";
 
 // We also import the increment value from the common code.
-import { INCREMENT, State } from "../common/chess.js";
+import { INCREMENT } from "../common/chess.js";
 
 // This is how to import a specific item from a javascript module. Similar to
 // `from x import y` in python.

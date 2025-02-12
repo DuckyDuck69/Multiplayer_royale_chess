@@ -1,14 +1,9 @@
-export const INCREMENT = 1;
+import Board from './board.js';
+import Move, { MoveType } from './move.js';
+import Obstacle, { ObstacleType } from './obstacle.js';
+import Piece, { PieceType } from './piece.js';
 
-// Different types of pieces in the game to determine movesets
-export const PieceType = {
-    Pawn: 0,
-    Knight: 1,
-    Bishop: 2,
-    Rook: 3,
-    Queen: 4,
-    King: 5,
-};
+export const INCREMENT = 1;
 
 // A pawn can only capture diagonally and only move orthogonally, this could be
 // applied to other future pieces as well
@@ -17,15 +12,6 @@ const CaptureMode = {
     OnlyCapture: 1,
     OnlyMove: 2,
 }
-
-// MoveType.None: The piece cannot move here
-// MoveType.Move: The piece can move here
-// MoveType.Capture: The piece can move here but cannot go further
-const MoveType = {
-    None: 0,
-    Move: 1,
-    Capture: 2,
-};
 
 // Vectors for each of the types of movement
 const ORTHOGONAL = [[0, 1], [1, 0], [0, -1], [-1, 0]];
@@ -37,7 +23,7 @@ const DEFAULT_LAYOUT = [PieceType.Rook, PieceType.Knight, PieceType.Bishop, Piec
 export const BLACK_OWNER = 1;
 export const WHITE_OWNER = 0;
 
-export class State {
+export default class State {
 
     constructor(width = 16, height = 16) {
         this.width = width;
@@ -48,7 +34,7 @@ export class State {
     }
 
     static default() {
-        const state = new State(8, 8);
+        const state = new State();
 
         for (let i = 0; i < 8; i += 1) {
             state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 0, BLACK_OWNER));
@@ -56,6 +42,9 @@ export class State {
             state.pieces.push(new Piece(PieceType.Pawn, i, 6, WHITE_OWNER));
             state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 7, WHITE_OWNER));
         }
+
+        state.board.addObstacle(Obstacle.wall(7, 10));
+        state.board.addObstacle(Obstacle.mud(0, 10));
 
         return state;
     }
@@ -78,6 +67,13 @@ export class State {
         const at = this.pieceAt(x, y);
         if (x < 0 || y < 0 || x >= this.width || y >= this.height) {
             return MoveType.None;
+        }
+        const obstacles = this.board.obstaclesAt(x, y);
+        if (obstacles.some(o => o.getType() === ObstacleType.Wall)) {
+            return MoveType.None;
+        }
+        if (obstacles.some(o => o.getType() === ObstacleType.Mud)) {
+            return MoveType.Capture;
         }
         if (at) {
             if (at.owner === owner) {
@@ -129,8 +125,6 @@ export class State {
         }
     }
 
-
-
     calculateLineMoves(piece, dx, dy, maxDistance = 8, captureMode = CaptureMode.Any) {
         let distance = 1;
         const moves = [];
@@ -153,73 +147,36 @@ export class State {
         return moves;
     }
 
-}
-
-// Holds state about the board such as obstacles (portals? walls?)
-export class Board {
-
-    constructor(obstacles = []) {
-        this.obstacles = obstacles;
-    }
-
-}
-
-// Class to represent a single move
-export class Move {
-
-    constructor(piece, x, y) {
-        this.piece = piece;
-        this.x = x;
-        this.y = y;
-    }
-
-    toString() {
-        return `${Piece.name(this.piece.type)}${String.fromCharCode(97 + this.x)}${this.y + 1}`;
-    }
-
-}
-
-export class Piece {
-
-    constructor(type, x, y, owner) {
-        // The type of the piece (an integer representing the PieceType above)
-        this.type = type;
-        // Position of the piece on the board (integer)
-        this.x = x;
-        this.y = y;
-        // Owner index (integer)
-        this.owner = owner;
-
-        // Piece tags representing state, i.e. "canEnPassant" or "canCastle"
-        this.tags = [];
-    }
-
-    static name(pieceType) {
-        switch (pieceType) {
-            case PieceType.Rook: return 'R';
-            case PieceType.Bishop: return 'B';
-            case PieceType.Queen: return 'Q';
-            case PieceType.King: return 'K';
-            case PieceType.Pawn: return '';
-            case PieceType.Knight: return 'N';
+    // Assumes move is valid
+    // Returns true if piece is captured
+    makeMove(move) {
+        // ensures we have proper reference to the piece
+        const piece = this.pieceAt(move.getPiece().getX(), move.getPiece().getY());
+        
+        const moveToIndex = this.pieces.indexOf(this.pieceAt(move.getX(), move.getY()));
+        if (moveToIndex >= 0) {
+            this.pieces.splice(moveToIndex);
         }
-        return '?';
-    } 
 
-    getX() {
-        return this.x;
+        piece.moveTo(move.getX(), move.getY());
+
+        return moveToIndex >= 0;
     }
 
-    getY() {
-        return this.y;
-    }
-
-    getType() {
-        return this.type;
-    }
-
-    getOwner() {
-        return this.owner;
+    toString(x = 0, y = 0, w = 8, h = 8) {
+        let str = "";
+        for (let i = y; i < y + h; i += 1) {
+            for (let j = x; j < x + w; j += 1) {
+                const at = this.pieceAt(j, i);
+                if (at) {
+                    str += at.toString() || 'p';
+                } else {
+                    str += '.';
+                }
+            }
+            str += "\n";
+        }
+        return str;
     }
 
 }
