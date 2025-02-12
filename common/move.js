@@ -19,6 +19,19 @@ export default class Move {
         this.y = y;
     }
 
+    getPiece() {
+        return this.piece;
+    }
+
+    getX() {
+        return this.x;
+    }
+
+    getY() {
+        return this.y;
+    }
+
+
     toString() {
         return `${Piece.name(this.piece.type)}${String.fromCharCode(97 + this.x)}${this.y + 1}`;
     }

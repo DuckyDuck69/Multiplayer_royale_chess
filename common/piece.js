@@ -36,12 +36,21 @@ export default class Piece {
         return '?';
     } 
 
+    toString() {
+        return Piece.name(this.getType());
+    }
+
     getX() {
         return this.x;
     }
 
     getY() {
         return this.y;
+    }
+    
+    moveTo(x, y) {
+        this.x = x;
+        this.y = y;
     }
 
     getType() {

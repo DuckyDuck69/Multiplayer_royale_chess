@@ -125,8 +125,6 @@ export default class State {
         }
     }
 
-
-
     calculateLineMoves(piece, dx, dy, maxDistance = 8, captureMode = CaptureMode.Any) {
         let distance = 1;
         const moves = [];
@@ -147,6 +145,38 @@ export default class State {
             distance += 1;
         }
         return moves;
+    }
+
+    // Assumes move is valid
+    // Returns true if piece is captured
+    makeMove(move) {
+        // ensures we have proper reference to the piece
+        const piece = this.pieceAt(move.getPiece().getX(), move.getPiece().getY());
+        
+        const moveToIndex = this.pieces.indexOf(this.pieceAt(move.getX(), move.getY()));
+        if (moveToIndex >= 0) {
+            this.pieces.splice(moveToIndex);
+        }
+
+        piece.moveTo(move.getX(), move.getY());
+
+        return moveToIndex >= 0;
+    }
+
+    toString(x = 0, y = 0, w = 8, h = 8) {
+        let str = "";
+        for (let i = y; i < y + h; i += 1) {
+            for (let j = x; j < x + w; j += 1) {
+                const at = this.pieceAt(j, i);
+                if (at) {
+                    str += at.toString() || 'p';
+                } else {
+                    str += '.';
+                }
+            }
+            str += "\n";
+        }
+        return str;
     }
 
 }
