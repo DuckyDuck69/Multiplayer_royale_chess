@@ -153,14 +153,12 @@ export default class State {
         // ensures we have proper reference to the piece
         const piece = this.pieceAt(move.getPiece().getX(), move.getPiece().getY());
         
-        const moveToIndex = this.pieces.indexOf(this.pieceAt(move.getX(), move.getY()));
-        if (moveToIndex >= 0) {
-            this.pieces.splice(moveToIndex);
-        }
+        const previousLength = this.pieces.length;
+        this.pieces = this.pieces.filter(p => p.getX() !== move.getX() || p.getY() !== move.getY());
 
         piece.moveTo(move.getX(), move.getY());
 
-        return moveToIndex >= 0;
+        return this.pieces.length < previousLength;
     }
 
     toString(x = 0, y = 0, w = 8, h = 8) {

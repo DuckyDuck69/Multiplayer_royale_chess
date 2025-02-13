@@ -22,6 +22,8 @@ const myCanvas = document.getElementById("chessBoard");
 const ctx = myCanvas.getContext("2d");
 
 const state = State.default();
+const moveDot= new Image();
+moveDot.src = 'textures/move_dot.png';
 const pieceNames = ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king'];
 const whitePieceImgs = pieceNames.map(name => 'textures/light_' + name + '.png')
     .map(path => {
@@ -35,6 +37,7 @@ const blackPieceImgs = pieceNames.map(name => 'textures/dark_' + name + '.png')
         image.src = path;
         return image;
     });
+
 
 console.log(whitePieceImgs)
 
@@ -52,6 +55,9 @@ let grid = [];
 let columns = 16;
 let rows = 16;
 
+let mouseTileX = 0, mouseTileY = 0;
+let selected = false, selectedX = 0, selectedY = 0;
+
 let size = (displayHeight / columns);  //calculate the size of each square
 
 //create a Cell object, which can be assigned method for later use
@@ -66,11 +72,50 @@ function Cell(x, y){
     }
 }
 
-window.addEventListener('load', function() {   //draw the board after the html/css load
+function drawBoard() {
     createGrid();
     colorBoard();
     drawPieces();
-})
+    if (selected) {
+        showMoves();
+    }
+}
+
+window.addEventListener('load', function() {   //draw the board after the html/css load
+    drawBoard();
+});
+
+myCanvas.addEventListener('mousemove',function(event){ //mouse listener that displays possible moves of pieces when clicked 
+    mouseTileX = Math.floor(event.offsetX / size);
+    mouseTileY = Math.floor(event.offsetY / size);
+});
+
+myCanvas.addEventListener('click', () => {
+    if (selected) {
+        const piece = state.pieceAt(selectedX, selectedY);
+        const moves = state.pieceMoves(piece);
+        const requestedMove = moves.find((m) => m.getX() === mouseTileX && m.getY() === mouseTileY);
+        
+        if (requestedMove) {
+            state.makeMove(requestedMove);
+            selected = false;
+        } else {
+            selected = false;
+        }
+    } else {
+        if (state.pieceAt(mouseTileX, mouseTileY)) {
+            selected = true;
+            selectedX = mouseTileX;
+            selectedY = mouseTileY;
+        }
+    }
+
+    drawBoard();
+    if (selected) {
+        showMoves();
+    }
+});
+
 
 function createGrid(){
     for( let y = 0; y < rows; y++){      //for each row, iterate for each column
@@ -96,13 +141,24 @@ function colorBoard(){
 function drawPieces(){
     for(const piece of state.pieces){
         if(piece.owner===BLACK_OWNER){
-            ctx.drawImage(blackPieceImgs[piece.type],piece.x*size,piece.y*size,size,size)
+            ctx.drawImage(blackPieceImgs[piece.type],piece.x*size,piece.y*size,size,size);
         }
         else {
-            ctx.drawImage(whitePieceImgs[piece.type],piece.x*size,piece.y*size,size,size)
+            ctx.drawImage(whitePieceImgs[piece.type],piece.x*size,piece.y*size,size,size);
         }
     }
 }
 
+function showMoves(){
+    const piece = state.pieceAt(Math.floor(selectedX), Math.floor(selectedY));
+    if (piece) {
+        console.log(piece);
+        const moves = state.pieceMoves(piece);
+        console.log(moves);
+        for (const move of moves) {
+            ctx.drawImage(moveDot, move.x * size, move.y * size, size, size);
+        }
+    }
+}
 
 
