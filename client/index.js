@@ -48,6 +48,7 @@ myCanvas.style.width = displayWidth + 'px';  //scale canvas height + width
 myCanvas.style.height = displayHeight + 'px';
 ctx.scale(devicePixelRatio, devicePixelRatio); //scale according to the API value, in this case 2  //so it scale by a value of 200%
 
+
 let grid = [];
 let columns = 16;
 let rows = 16;
@@ -116,15 +117,17 @@ function drawPieces(){
 }
 
 function randomObstacle(){
-    const wallColor = 'orange';
-    const mudColor = 'brown';
-    const minRow = 5;
-    const maxRow = 11;
-    generateDirection(minRow,maxRow, wallColor);
-    generateDirection(minRow, maxRow, mudColor);
+    let wallColor = 'orange';
+    let mudColor = 'brown';
+    let minRow = 5;
+    let maxRow = 11;
+    let numWall = 5;
+    let numMud = 8
+    generateDirection(numWall, minRow,maxRow, wallColor);
+    generateDirection(numMud, minRow, maxRow, mudColor);
 }
 
-function generateDirection(minRow, maxRow, Color){
+function generateDirection(number, minRow, maxRow, Color){
     console.log("Hello")
     //choose a random start Cell between row 4-12
     //Math.random() creates a float between 0 and 1, startRange indicates we only want the wall to generates
@@ -145,7 +148,7 @@ function generateDirection(minRow, maxRow, Color){
     let current = ranStart;
 
     //loop to draw 5 more cells
-    for(let i = 0; i < 5 ; i++){  
+    for(let i = 0; i < number ; i++){  
         //choose the next Cell
         let chooseCell = false;  //mark that we haven't chose any cell to be our next cell
         while (chooseCell == false){   //loop until we choose a valid next cell
