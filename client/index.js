@@ -153,15 +153,15 @@ function generateDirection(minRow, maxRow, Color){
                 current = current - 16;   
                 chooseCell = true;
             }
-            else if (ranDirection == 1 && grid[current].x < 15 && !grid[current + 1].isObstacle){ //if direction is right and not in the last column
+            else if (ranDirection == 1 && grid[current].x < 15 && !grid[current + 1].isObstacle){ //if direction is right and not in the last column, and the cell is not an obstacle already
                 current = current + 1;
                 chooseCell = true;
             }
-            else if (ranDirection == 2 && grid[current].y < (startRange + minRow) && !grid[current + 16].isObstacle){  //if direction is down and not out of bound
+            else if (ranDirection == 2 && grid[current].y < (startRange + minRow) && !grid[current + 16].isObstacle){  //if direction is down and not out of bound, and the cell is not an obstacle already
                 current = current + 16;
                 chooseCell = true;
             }
-            else if (ranDirection == 3 && grid[current].x > 0 && !grid[current - 1].isObstacle){  //if direction is left and not in the 1st column
+            else if (ranDirection == 3 && grid[current].x > 0 && !grid[current - 1].isObstacle){  //if direction is left and not in the 1st column, and the cell is not an obstacle already
                 current = current - 1;
                 chooseCell = true;
             }
