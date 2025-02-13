@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 
 // This imports the INCREMENT value from the /common/chess.js file. Files in the
 // /common directory should be accessible from both the client and server.
-import State, { BLACK_OWNER, INCREMENT } from "../common/chess";
+import State, { BLACK_OWNER, INCREMENT, WHITE_OWNER } from "../common/chess";
 
 
 console.log("Hello from the browser!");
@@ -63,6 +63,8 @@ const directions = [
     3   //left
 ];
 
+let turn = 0;
+
 let mouseTileX = 0, mouseTileY = 0;
 let selected = false, selectedX = 0, selectedY = 0;
 
@@ -91,6 +93,20 @@ function drawBoard() {
     if (selected) {
         showMoves();
     }
+
+    if (turn === WHITE_OWNER) {
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'black';
+        ctx.font = 'bold 32px sans-serif';
+        ctx.fillText('white\'s turn.', 10, 600);
+        ctx.strokeText('white\'s turn.', 10, 600);
+    } else {
+        ctx.fillStyle = 'black';
+        ctx.strokeStyle = 'white';
+        ctx.font = 'bold 32px sans-serif';
+        ctx.fillText('black\'s turn.', 10, 600);
+        ctx.strokeText('black\'s turn.', 10, 600);
+    }
 }
 
 window.addEventListener('load', function() {   //draw the board after the html/css load
@@ -111,11 +127,13 @@ myCanvas.addEventListener('click', () => {
         if (requestedMove) {
             state.makeMove(requestedMove);
             selected = false;
+            turn = 1 - turn;
         } else {
             selected = false;
         }
     } else {
-        if (state.pieceAt(mouseTileX, mouseTileY)) {
+        const piece = state.pieceAt(mouseTileX, mouseTileY);
+        if (piece && piece.owner === turn) {
             selected = true;
             selectedX = mouseTileX;
             selectedY = mouseTileY;
@@ -209,6 +227,7 @@ function generateDirection(number, minRow, maxRow, Color){
         //choose the next Cell
         let chooseCell = false;  //mark that we haven't chose any cell to be our next cell
         while (chooseCell == false){   //loop until we choose a valid next cell
+            console.log('while forever');
             if (ranDirection == 0 && grid[current].y > minRow && !grid[current - 16].isObstacle){    //if direction is up, not out of bound, and the cell is not an obstacle when we apply the math
                 current = current - 16;   
                 chooseCell = true;
@@ -231,6 +250,8 @@ function generateDirection(number, minRow, maxRow, Color){
         }
         grid[current].show(Color);   //color the obstacle cell 
         grid[current].isObstacle = true;     //set the obstacle status of that cell
-    }   
+    }
+
+    grid.forEach(g => g.isObstacle = false);
 }
 
