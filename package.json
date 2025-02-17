@@ -6,7 +6,10 @@
   "scripts": {
     "dev:client": "parcel watch --no-cache --log-level warn client/index.html",
     "dev:server": "nodemon --quiet --watch server --watch common server/index.js",
-    "dev": "concurrently -k -p \"[{name}/{time}]\" -n \"server,client\" -c \"blue.bold,yellow.bold\" \"npm run dev:server\" \"npm run dev:client\"",
+    "copy:remove": "rimraf dist",
+    "copy:copy": "cpy ./assets ../../dist --cwd=./client",
+    "copy": "npm run copy:remove && npm run copy:copy",
+    "dev": "npm run copy && concurrently -k -p \"[{name}/{time}]\" -n \"server,client\" -c \"blue.bold,yellow.bold\" \"npm run dev:server\" \"npm run dev:client\"",
     "test:chess": "node tests/chess.js"
   },
   "author": "Harper Davis, Cristobal Cantu, Duc Phan, Minh Pham",
@@ -17,8 +20,10 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
+    "cpy-cli": "^5.0.0",
     "nodemon": "^3.1.9",
     "parcel": "^2.13.3",
+    "rimraf": "^6.0.1",
     "socket.io-client": "^4.8.1"
   }
 }

@@ -23,15 +23,15 @@ const ctx = myCanvas.getContext("2d");
 
 const state = State.default();
 const moveDot= new Image();
-moveDot.src = 'textures/move_dot.png';
+moveDot.src = 'assets/textures/move_dot.png';
 const pieceNames = ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king'];
-const whitePieceImgs = pieceNames.map(name => 'textures/light_' + name + '.png')
+const whitePieceImgs = pieceNames.map(name => 'assets/textures/light_' + name + '.png')
     .map(path => {
         const image = new Image();
         image.src = path;
         return image;
     });
-const blackPieceImgs = pieceNames.map(name => 'textures/dark_' + name + '.png')
+const blackPieceImgs = pieceNames.map(name => 'assets/textures/dark_' + name + '.png')
     .map(path => {
         const image = new Image();
         image.src = path;
