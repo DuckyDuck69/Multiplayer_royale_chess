@@ -56,12 +56,6 @@ let grid = [];
 let columns = 16;
 let rows = 16;
  //imagine clockwised direction where up is on top of your head, then right, then down, and then left
-const directions = [
-    0,  //up
-    1,  //right
-    2,  //down
-    3   //left
-];
 
 let turn = 0;
 
@@ -70,11 +64,15 @@ let selected = false, selectedX = 0, selectedY = 0;
 
 let size = (displayHeight / columns);  //calculate the size of each square
 
+let gridInitialized = false;
+
 //create a Cell object, which can be assigned method for later use
 class Cell {
     constructor(x, y) {
         this.x = x;
         this.y = y;
+        this.isWall = false;
+        this.isMud = false
         this.isObstacle = false;
     }
     show(color) {
@@ -83,12 +81,23 @@ class Cell {
         ctx.fillStyle = color;
         ctx.fillRect(x_coor, y_coor, size, size);
     }
+    setWall(color) {  //create a new method to color the wall and set the state
+        this.isWall = true;
+        this.isObstacle = true
+        this.colorWall = color;
+        this.show(color);
+    }
+    setMud(color) {  //create a new method to color the wall and set the state
+        this.isMud = true;
+        this.isObstacle = true
+        this.colorMud = color;
+        this.show(color);
+    }
 }
 
 function drawBoard() {
-    createGrid();
-    colorBoard();
-    randomObstacle();
+    colorBoard();   //the board has to be drawn first
+    drawObstacles(); //draw the obstacle again each time the board is drawn
     drawPieces();
     if (selected) {
         showMoves();
@@ -109,8 +118,10 @@ function drawBoard() {
     }
 }
 
-window.addEventListener('load', function() {   //draw the board after the html/css load
+window.addEventListener('load', function(){   //draw the board after the html/css load
+    createGrid();
     drawBoard();
+    randomObstacle();
 });
 
 myCanvas.addEventListener('mousemove',function(event){ //mouse listener that displays possible moves of pieces when clicked 
@@ -148,11 +159,14 @@ myCanvas.addEventListener('click', () => {
 
 
 function createGrid(){
-    for( let y = 0; y < rows; y++){      //for each row, iterate for each column
-        for( let x = 0; x < columns; x++){      
-            let cell = new Cell(x, y);          // make new Cell objects
-            grid.push(cell);                    //push those Cells into the grid            
+    if(!gridInitialized){    //only create the grid one time 
+        for( let y = 0; y < rows; y++){      //for each row, iterate for each column
+            for( let x = 0; x < columns; x++){      
+                let cell = new Cell(x, y);          // make new Cell objects
+                grid.push(cell);                    //push those Cells into the grid            
+            }
         }
+        gridInitialized = true;   // this function is done after the grid is create
     }
 }
 
@@ -164,6 +178,17 @@ function colorBoard(){
             grid[i].show('#F5DCE0');    //Since grid[i] is a Cell object, we can use the show() method
         } else {
             grid[i].show('#E18AAA');
+        }
+    }
+}
+
+function drawObstacles() {   
+    for(let i = 0; i < grid.length; i++) {
+        if (grid[i].isWall) {
+            grid[i].show(grid[i].colorWall);
+        }
+        else if(grid[i].isMud){
+            grid[i].show(grid[i].colorMud);
         }
     }
 }
@@ -196,62 +221,75 @@ function randomObstacle(){
     let mudColor = 'brown';
     let minRow = 5;
     let maxRow = 11;
-    let numWall = 5;
-    let numMud = 8
-    generateDirection(numWall, minRow,maxRow, wallColor);
-    generateDirection(numMud, minRow, maxRow, mudColor);
+    let numWall = 7;
+    let numMud = 12;
+    let drawMud = "Mud"
+    let drawWall = "Wall"
+    const direction_mud = [
+        [ 0, -1], [ 0, 1],//up and down diretion respectively
+        [ 1,  0], [-1, 0],//right and left direction respectively
+        [ 1, -1], [ 1, 1],//diagonal up right and down right respectively
+        [-1, -1], [-1, 1] //diagonal up left and down left respectively
+    ];
+    const directions_wall = [
+        [ 0, -1],  //up
+        [ 1,  0],  //right
+        [ 0,  1],  //down
+        [-1,  0],   //left
+    ];
+    //generateWall(numWall, minRow,maxRow, wallColor);
+    generateObstacles(direction_mud, numMud, minRow, maxRow, mudColor, drawMud);
+    generateObstacles(directions_wall, numWall, minRow, maxRow, wallColor, drawWall);
+
 }
 
-function generateDirection(number, minRow, maxRow, Color){
-    console.log("Hello")
-    //choose a random start Cell between row 4-12
-    //Math.random() creates a float between 0 and 1, startRange indicates we only want the wall to generates
-    //in the 7 rows length, minRow is our start row
-    const startRange = maxRow - minRow + 1;
-    let ranDirection;
-    let ranStart = Math.floor(Math.random() * (16 * startRange)) + 16*minRow;  
+function generateObstacles(directionChoice, number, minRow, maxRow, Color, type){
+    const startX = 13 - 2 + 1;
+    const startY = maxRow - minRow + 1;
+    let currentX = Math.floor(Math.random()  * startX) + 2;
+    let currentY = Math.floor(Math.random()  * startY) + minRow;
 
-    while(grid[ranStart].isObstacle == true){
-       ranStart = Math.floor(Math.random() * (16 * startRange)) + 16*minRow; 
-    }
-
-    //choose a random number of direction between 0 and 3
-    ranDirection = Math.floor(Math.random() * directions.length); 
-    grid[ranStart].show(Color);   //color the obstacle cell 
-    grid[ranStart].isObstacle = true;     //set the obstacle status of that cell
-    //create a current variable to keep track of the current Cell
-    let current = ranStart;
-
-    //loop to draw 5 more cells
-    for(let i = 0; i < number ; i++){  
-        //choose the next Cell
-        let chooseCell = false;  //mark that we haven't chose any cell to be our next cell
-        while (chooseCell == false){   //loop until we choose a valid next cell
-            console.log('while forever');
-            if (ranDirection == 0 && grid[current].y > minRow && !grid[current - 16].isObstacle){    //if direction is up, not out of bound, and the cell is not an obstacle when we apply the math
-                current = current - 16;   
-                chooseCell = true;
-            }
-            else if (ranDirection == 1 && grid[current].x < 15 && !grid[current + 1].isObstacle){ //if direction is right and not in the last column, and the cell is not an obstacle already
-                current = current + 1;
-                chooseCell = true;
-            }
-            else if (ranDirection == 2 && grid[current].y < (startRange + minRow) && !grid[current + 16].isObstacle){  //if direction is down and not out of bound, and the cell is not an obstacle already
-                current = current + 16;
-                chooseCell = true;
-            }
-            else if (ranDirection == 3 && grid[current].x > 0 && !grid[current - 1].isObstacle){  //if direction is left and not in the 1st column, and the cell is not an obstacle already
-                current = current - 1;
-                chooseCell = true;
-            }
-            else{    //if those conditions above is not fulfilled, choose another direction
-                ranDirection = Math.floor(Math.random() * directions.length);
+    let ranDirection = Math.floor(Math.random() * directionChoice.length);  //random a number between 0 and 7 to access the direction
+    let numCell = 0;
+    let nextX,nextY;
+    while(numCell < number){
+        let gridIndex = currentY * columns + currentX;  //choose a Cell to start
+        if (currentX >= 0 && currentX < columns && 
+            currentY >= 0 && currentY < rows &&
+            gridIndex >= 0 && gridIndex < grid.length){   //if the coordinate is not out of bound
+            // Check if there's a piece at this designated position
+            const piece = state.pieceAt(currentX, currentY);
+            // Only place obscacle if cell is not a piece, wall, or mud)
+            if (!piece && !grid[gridIndex].isWall && !grid[gridIndex].isMud) {
+                if(type == "Mud"){
+                    grid[gridIndex].setMud(Color); 
+                    numCell += 1; 
+                }
+                else if(type == "Wall"){
+                    grid[gridIndex].setWall(Color);
+                    numCell += 1; 
+                }
             }
         }
-        grid[current].show(Color);   //color the obstacle cell 
-        grid[current].isObstacle = true;     //set the obstacle status of that cell
+        //create 2 variable to check if the next X and Y is valid
+        ranDirection = Math.floor(Math.random() * directionChoice.length);
+        nextX = currentX + directionChoice[ranDirection][0];
+        nextY = currentY + directionChoice[ranDirection][1];
+        gridIndex = nextY * columns + nextX;
+        let isNextValid = false   //initiallize it to unvalid
+        while(!isNextValid){  
+            if (nextX >= 0 && nextX < columns && 
+                nextY >= 0 && nextY < rows && grid[gridIndex].isObstacle == false){  //if the coordinate is not out of bound and that grid is not an obstacle
+                    currentX += directionChoice[ranDirection][0];
+                    currentY += directionChoice[ranDirection][1];
+                    isNextValid = true;
+                }
+            else{    //generate direction until we have a valid grid
+                ranDirection = Math.floor(Math.random() * directionChoice.length);
+                nextX = currentX + directionChoice[ranDirection][0];
+                nextY = currentY + directionChoice[ranDirection][1];
+                gridIndex = nextY * columns + nextX;
+            }
+        }
     }
-
-    grid.forEach(g => g.isObstacle = false);
 }
-
