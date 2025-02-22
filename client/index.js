@@ -259,7 +259,7 @@ function generateObstacles(directionChoice, number, minRow, maxRow, Color, type)
             gridIndex >= 0 && gridIndex < grid.length){   //if the coordinate is not out of bound
             // Check if there's a piece at this designated position
             const piece = state.pieceAt(currentX, currentY);
-            // Only place obscacle if cell is empty (no piece, not a wall, not mud)
+            // Only place obscacle if cell is not a piece, wall, or mud)
             if (!piece && !grid[gridIndex].isWall && !grid[gridIndex].isMud) {
                 if(type == "Mud"){
                     grid[gridIndex].setMud(Color); 
@@ -279,12 +279,12 @@ function generateObstacles(directionChoice, number, minRow, maxRow, Color, type)
         let isNextValid = false   //initiallize it to unvalid
         while(!isNextValid){  
             if (nextX >= 0 && nextX < columns && 
-                nextY >= 0 && nextY < rows && grid[gridIndex].isObstacle == false){
+                nextY >= 0 && nextY < rows && grid[gridIndex].isObstacle == false){  //if the coordinate is not out of bound and that grid is not an obstacle
                     currentX += directionChoice[ranDirection][0];
                     currentY += directionChoice[ranDirection][1];
                     isNextValid = true;
                 }
-            else{
+            else{    //generate direction until we have a valid grid
                 ranDirection = Math.floor(Math.random() * directionChoice.length);
                 nextX = currentX + directionChoice[ranDirection][0];
                 nextY = currentY + directionChoice[ranDirection][1];
