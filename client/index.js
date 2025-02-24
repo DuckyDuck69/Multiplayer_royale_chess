@@ -294,7 +294,7 @@ function generateObstacles(directionChoice, number, minRow, maxRow, Color, type)
     }
 }
 
-
+//button redirection
 document.getElementById("tutorialButton").addEventListener("click", () => {
     window.location.href = "tutorial.html"; // Redirect to the tutorial page
 });
