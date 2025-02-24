@@ -293,3 +293,8 @@ function generateObstacles(directionChoice, number, minRow, maxRow, Color, type)
         }
     }
 }
+
+
+document.getElementById("tutorialButton").addEventListener("click", () => {
+    window.location.href = "tutorial.html"; // Redirect to the tutorial page
+});

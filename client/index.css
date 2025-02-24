@@ -11,3 +11,27 @@ canvas {
     border: 1px solid black;
     display: block;
 }
+
+#buttonContainer {
+    position: absolute; 
+    top: 20px; 
+    right: 20px; 
+}
+
+#tutorialButton {
+    padding: 7px 25px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #d58ea9; 
+    color: white; 
+    border: none;
+    border-radius: 10px;
+}
+
+#tutorialButton:hover {
+    background-color: #fdc4cd; 
+}
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
