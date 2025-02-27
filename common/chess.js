@@ -158,17 +158,15 @@ export default class State {
         return this.findKing(owner).inCoordinatesList(this.attackMap[owner]);
     }
 
-    // Return a list of moves that the piece can make
-    pieceMoves(piece) {
-        if (this.isInCheck(piece.owner)) {
-            // can only either block, take, or move king
-            return [];
-        } else {
-            return this.uncheckedMoves(piece);
-        }
+    hasLost(owner) {
+        return !this.findKing(owner);
     }
 
-    uncheckedMoves(piece) {
+    // Return a list of moves that the piece can make
+    pieceMoves(piece) {
+        if (this.hasLost(piece.owner)) {
+            return [];
+        }
         switch (piece.getType()) {
             case PieceType.Rook: {
                 return ORTHOGONAL.flatMap(([dx, dy]) =>
@@ -297,6 +295,10 @@ export default class State {
                 }).filter((p) => p);
             }
         }
+    }
+
+    uncheckedMoves(piece) {
+        
     }
 
     calculateLineMoves(

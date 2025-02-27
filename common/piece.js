@@ -6,6 +6,12 @@ export const PieceType = {
     Rook: 3,
     Queen: 4,
     King: 5,
+    ChimeraLion: 6,
+    ChimeraGoat: 7,
+    Gorgon: 8,
+    Pegasus: 9,
+    Juggernaut: 10,
+    Builder: 11,
 };
 
 export const PieceTags = {};
@@ -41,6 +47,14 @@ export default class Piece {
                 return "";
             case PieceType.Knight:
                 return "N";
+            case PieceType.ChimeraLion:
+                return "CL";
+            case PieceType.ChimeraGoat:
+                return "CG";
+            case PieceType.Gorgon:
+                return "G";
+            case PieceType.Pegasus:
+                return "P";
         }
         return "?";
     }
