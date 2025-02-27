@@ -1,13 +1,46 @@
-body {
+#chessContainer {
     font-family: sans-serif;
     display: flex;
     justify-content: center;  /* Center horizontally */
     align-items: center;  /* Center vertically */
-    height: 100vh;  /* Full viewport height */
     margin: 0;  /* Remove default margin */
 }
 
 canvas {
     border: 1px solid black;
     display: block;
+}
+
+#buttonContainer {
+    position: absolute; 
+    top: 20px; 
+    right: 20px; 
+}
+
+#buttonContainer {
+    padding: 7px 25px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #d58ea9; 
+    color: white; 
+    border: none;
+    border-radius: 10px;
+}
+
+#buttonContainer:hover {
+    background-color: #fdc4cd; 
+}
+
+#tutorialButton {
+    background-color: transparent;
+    border-color: transparent;
+}
+#maingameButton {
+    background-color: transparent;
+    border-color: transparent;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
 }
