@@ -4,6 +4,7 @@ import { io } from "socket.io-client";
 // This imports the INCREMENT value from the /common/chess.js file. Files in the
 // /common directory should be accessible from both the client and server.
 import State, { BLACK_OWNER, INCREMENT, WHITE_OWNER } from "../common/chess";
+import { ObstacleType } from "../common/obstacle";
 
 
 console.log("Hello from the browser!");
@@ -21,10 +22,13 @@ socket.on("connect", () => {
 const myCanvas = document.getElementById("chessBoard");
 const ctx = myCanvas.getContext("2d");
 
+const stunImg = new Image();
+stunImg.src = 'assets/textures/stun.png';
+
 const state = State.default();
 const moveDot= new Image();
 moveDot.src = 'assets/textures/move_dot.png';
-const pieceNames = ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king'];
+const pieceNames = ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king', 'pawn', 'pawn', 'pawn', 'pegasus', 'juggernaut', 'pawn'];
 const whitePieceImgs = pieceNames.map(name => 'assets/textures/light_' + name + '.png')
     .map(path => {
         const image = new Image();
@@ -32,6 +36,14 @@ const whitePieceImgs = pieceNames.map(name => 'assets/textures/light_' + name + 
         return image;
     });
 const blackPieceImgs = pieceNames.map(name => 'assets/textures/dark_' + name + '.png')
+    .map(path => {
+        const image = new Image();
+        image.src = path;
+        return image;
+    });
+
+const obstacleImages = ['mountain', 'mud']
+    .map(name => `assets/textures/${name}.png`)
     .map(path => {
         const image = new Image();
         image.src = path;
@@ -121,7 +133,7 @@ function drawBoard() {
 window.addEventListener('load', function(){   //draw the board after the html/css load
     createGrid();
     drawBoard();
-    randomObstacle();
+    // randomObstacle();
 });
 
 myCanvas.addEventListener('mousemove',function(event){ //mouse listener that displays possible moves of pieces when clicked 
@@ -183,13 +195,8 @@ function colorBoard(){
 }
 
 function drawObstacles() {   
-    for(let i = 0; i < grid.length; i++) {
-        if (grid[i].isWall) {
-            grid[i].show(grid[i].colorWall);
-        }
-        else if(grid[i].isMud){
-            grid[i].show(grid[i].colorMud);
-        }
+    for (const obstacle of state.board.obstacles) {
+        ctx.drawImage(obstacleImages[obstacle.getType()], obstacle.x*size,obstacle.y*size,size,size);
     }
 }
 
@@ -200,6 +207,10 @@ function drawPieces(){
         }
         else {
             ctx.drawImage(whitePieceImgs[piece.type],piece.x*size,piece.y*size,size,size);
+        }
+        if (piece.isStunned()) {
+            console.log('yo im stunned fr', piece);
+            ctx.drawImage(stunImg,piece.x*size,piece.y*size,size,size);
         }
     }
 }
@@ -212,84 +223,6 @@ function showMoves(){
         console.log(moves);
         for (const move of moves) {
             ctx.drawImage(moveDot, move.x * size, move.y * size, size, size);
-        }
-    }
-}
-
-function randomObstacle(){
-    let wallColor = 'orange';
-    let mudColor = 'brown';
-    let minRow = 5;
-    let maxRow = 11;
-    let numWall = 7;
-    let numMud = 12;
-    let drawMud = "Mud"
-    let drawWall = "Wall"
-    const direction_mud = [
-        [ 0, -1], [ 0, 1],//up and down diretion respectively
-        [ 1,  0], [-1, 0],//right and left direction respectively
-        [ 1, -1], [ 1, 1],//diagonal up right and down right respectively
-        [-1, -1], [-1, 1] //diagonal up left and down left respectively
-    ];
-    const directions_wall = [
-        [ 0, -1],  //up
-        [ 1,  0],  //right
-        [ 0,  1],  //down
-        [-1,  0],   //left
-    ];
-    //generateWall(numWall, minRow,maxRow, wallColor);
-    generateObstacles(direction_mud, numMud, minRow, maxRow, mudColor, drawMud);
-    generateObstacles(directions_wall, numWall, minRow, maxRow, wallColor, drawWall);
-
-}
-
-function generateObstacles(directionChoice, number, minRow, maxRow, Color, type){
-    const startX = 13 - 2 + 1;
-    const startY = maxRow - minRow + 1;
-    let currentX = Math.floor(Math.random()  * startX) + 2;
-    let currentY = Math.floor(Math.random()  * startY) + minRow;
-
-    let ranDirection = Math.floor(Math.random() * directionChoice.length);  //random a number between 0 and 7 to access the direction
-    let numCell = 0;
-    let nextX,nextY;
-    while(numCell < number){
-        let gridIndex = currentY * columns + currentX;  //choose a Cell to start
-        if (currentX >= 0 && currentX < columns && 
-            currentY >= 0 && currentY < rows &&
-            gridIndex >= 0 && gridIndex < grid.length){   //if the coordinate is not out of bound
-            // Check if there's a piece at this designated position
-            const piece = state.pieceAt(currentX, currentY);
-            // Only place obscacle if cell is not a piece, wall, or mud)
-            if (!piece && !grid[gridIndex].isWall && !grid[gridIndex].isMud) {
-                if(type == "Mud"){
-                    grid[gridIndex].setMud(Color); 
-                    numCell += 1; 
-                }
-                else if(type == "Wall"){
-                    grid[gridIndex].setWall(Color);
-                    numCell += 1; 
-                }
-            }
-        }
-        //create 2 variable to check if the next X and Y is valid
-        ranDirection = Math.floor(Math.random() * directionChoice.length);
-        nextX = currentX + directionChoice[ranDirection][0];
-        nextY = currentY + directionChoice[ranDirection][1];
-        gridIndex = nextY * columns + nextX;
-        let isNextValid = false   //initiallize it to unvalid
-        while(!isNextValid){  
-            if (nextX >= 0 && nextX < columns && 
-                nextY >= 0 && nextY < rows && grid[gridIndex].isObstacle == false){  //if the coordinate is not out of bound and that grid is not an obstacle
-                    currentX += directionChoice[ranDirection][0];
-                    currentY += directionChoice[ranDirection][1];
-                    isNextValid = true;
-                }
-            else{    //generate direction until we have a valid grid
-                ranDirection = Math.floor(Math.random() * directionChoice.length);
-                nextX = currentX + directionChoice[ranDirection][0];
-                nextY = currentY + directionChoice[ranDirection][1];
-                gridIndex = nextY * columns + nextX;
-            }
         }
     }
 }

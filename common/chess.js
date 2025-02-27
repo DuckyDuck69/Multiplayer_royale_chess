@@ -345,6 +345,7 @@ export default class State {
                 ];
             }
         }
+        return [];
     }
 
     calculateLineMoves(
@@ -405,7 +406,9 @@ export default class State {
             }
         }
 
-        if (piece.getType() === PieceType.Gorgon) {
+        const isCapture = this.pieces.length < previousLength;
+
+        if (piece.getType() === PieceType.Gorgon && isCapture) {
             this.pieces
                 .filter(
                     (p) =>
@@ -416,7 +419,7 @@ export default class State {
         }
 
         this.update();
-        return this.pieces.length < previousLength;
+        return isCapture;
     }
 
     toString(x = 0, y = 0, w = 8, h = 8) {

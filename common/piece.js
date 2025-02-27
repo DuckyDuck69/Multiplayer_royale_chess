@@ -15,8 +15,9 @@ export const PieceType = {
 };
 
 export const PieceTags = {
-    Stun2: 0,
-    Stun1: 1,
+    Stun3: 0,
+    Stun2: 1,
+    Stun1: 2,
 };
 
 export default class Piece {
@@ -109,14 +110,17 @@ export default class Piece {
     }
 
     isStunned() {
-        return this.tags.has(PieceTags.Stun1) || this.tags.has(PieceTags.Stun2);
+        return this.tags.has(PieceTags.Stun1) || this.tags.has(PieceTags.Stun2) || this.tags.has(PieceTags.Stun3);
     }
 
     update() {
-        if (this.tags.includes(PieceTags.Stun2)) {
+        if (this.tags.has(PieceTags.Stun3)) {
+            this.tags.delete(PieceTags.Stun3);
+            this.addTag(PieceTags.Stun2);
+        } else if (this.tags.has(PieceTags.Stun2)) {
             this.tags.delete(PieceTags.Stun2);
             this.addTag(PieceTags.Stun1);
-        } else if (this.tags.includes(PieceTags.Stun1)) {
+        } else if (this.tags.has(PieceTags.Stun1)) {
             this.tags.delete(PieceTags.Stun1);
         }
     }
