@@ -1,7 +1,7 @@
 import Board from "./board.js";
 import Move, { CastleType, MoveType } from "./move.js";
 import Obstacle, { ObstacleType } from "./obstacle.js";
-import Piece, { PieceType } from "./piece.js";
+import Piece, { PieceTags, PieceType } from "./piece.js";
 
 export const INCREMENT = 1;
 
@@ -40,10 +40,18 @@ const KNIGHT = [
 const DEFAULT_LAYOUT = [
     PieceType.Rook,
     PieceType.Knight,
+    PieceType.Pegasus,
+    PieceType.Gorgon,
     PieceType.Bishop,
+    PieceType.ChimeraGoat,
+    PieceType.ChimeraLion,
     PieceType.Queen,
     PieceType.King,
+    PieceType.Builder,
+    PieceType.Juggernaut,
     PieceType.Bishop,
+    PieceType.Gorgon,
+    PieceType.Pegasus,
     PieceType.Knight,
     PieceType.Rook,
 ];
@@ -66,11 +74,11 @@ export default class State {
     static default() {
         const state = new State();
 
-        for (let i = 0; i < 8; i += 1) {
+        for (let i = 0; i < 16; i += 1) {
             state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 0, BLACK_OWNER));
             state.pieces.push(new Piece(PieceType.Pawn, i, 1, BLACK_OWNER));
-            state.pieces.push(new Piece(PieceType.Pawn, i, 6, WHITE_OWNER));
-            state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 7, WHITE_OWNER));
+            state.pieces.push(new Piece(PieceType.Pawn, i, 14, WHITE_OWNER));
+            state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 15, WHITE_OWNER));
         }
 
         // state.board.addObstacle(Obstacle.wall(7, 10));
@@ -102,6 +110,11 @@ export default class State {
         console.log(this.attackMap);
     }
 
+    update() {
+        this.recalculateAttackMap();
+        this.pieces.forEach((p) => p.update());
+    }
+
     allMovesFor(owner) {
         return this.pieces
             .filter((p) => p.owner === owner)
@@ -117,16 +130,22 @@ export default class State {
     // MoveType.None: The piece cannot move here
     // MoveType.Move: The piece can move here
     // MoveType.Capture: The piece can move here but cannot go further
-    pieceCanMoveTo(owner, x, y) {
+    pieceCanMoveTo(owner, x, y, ignoresObstacles = false) {
         const at = this.pieceAt(x, y);
         if (x < 0 || y < 0 || x >= this.width || y >= this.height) {
             return MoveType.None;
         }
         const obstacles = this.board.obstaclesAt(x, y);
-        if (obstacles.some((o) => o.getType() === ObstacleType.Wall)) {
+        if (
+            !ignoresObstacles &&
+            obstacles.some((o) => o.getType() === ObstacleType.Wall)
+        ) {
             return MoveType.None;
         }
-        if (obstacles.some((o) => o.getType() === ObstacleType.Mud)) {
+        if (
+            !ignoresObstacles &&
+            obstacles.some((o) => o.getType() === ObstacleType.Mud)
+        ) {
             return MoveType.Capture;
         }
         if (at) {
@@ -165,6 +184,9 @@ export default class State {
     // Return a list of moves that the piece can make
     pieceMoves(piece) {
         if (this.hasLost(piece.owner)) {
+            return [];
+        }
+        if (piece.isStunned()) {
             return [];
         }
         switch (piece.getType()) {
@@ -283,10 +305,16 @@ export default class State {
                     ),
                 ];
             }
+            case PieceType.Pegasus:
             case PieceType.Knight: {
                 return KNIGHT.map(([dx, dy]) => {
                     const [x, y] = [piece.x + dx, piece.y + dy];
-                    const moveType = this.pieceCanMoveTo(piece.owner, x, y);
+                    const moveType = this.pieceCanMoveTo(
+                        piece.owner,
+                        x,
+                        y,
+                        piece.getType() === PieceType.Pegasus
+                    );
                     if (moveType !== MoveType.None) {
                         return new Move(piece, x, y);
                     } else {
@@ -294,11 +322,29 @@ export default class State {
                     }
                 }).filter((p) => p);
             }
+            case PieceType.Gorgon: {
+                return [
+                    ...ORTHOGONAL.flatMap(([dx, dy]) =>
+                        this.calculateLineMoves(
+                            piece,
+                            dx,
+                            dy,
+                            2,
+                            CaptureMode.OnlyMove
+                        )
+                    ),
+                    ...DIAGONAL.flatMap(([dx, dy]) =>
+                        this.calculateLineMoves(
+                            piece,
+                            dx,
+                            dy,
+                            2,
+                            CaptureMode.Any
+                        )
+                    ),
+                ];
+            }
         }
-    }
-
-    uncheckedMoves(piece) {
-        
     }
 
     calculateLineMoves(
@@ -359,7 +405,17 @@ export default class State {
             }
         }
 
-        this.recalculateAttackMap();
+        if (piece.getType() === PieceType.Gorgon) {
+            this.pieces
+                .filter(
+                    (p) =>
+                        Math.abs(p.getX() - piece.getX()) <= 1 &&
+                        Math.abs(p.getY() - piece.getY()) <= 1
+                )
+                .forEach((p) => p.addTag(PieceTags.Stun2));
+        }
+
+        this.update();
         return this.pieces.length < previousLength;
     }
 

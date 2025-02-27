@@ -14,7 +14,10 @@ export const PieceType = {
     Builder: 11,
 };
 
-export const PieceTags = {};
+export const PieceTags = {
+    Stun2: 0,
+    Stun1: 1,
+};
 
 export default class Piece {
     constructor(type, x, y, owner) {
@@ -30,7 +33,7 @@ export default class Piece {
         this.moveCount = 0;
 
         // Piece tags representing state, i.e. "canEnPassant" or "canCastle"
-        this.tags = [];
+        this.tags = new Set();
     }
 
     static name(pieceType) {
@@ -99,5 +102,22 @@ export default class Piece {
 
     getOwner() {
         return this.owner;
+    }
+
+    addTag(tag) {
+        this.tags.add(tag);
+    }
+
+    isStunned() {
+        return this.tags.has(PieceTags.Stun1) || this.tags.has(PieceTags.Stun2);
+    }
+
+    update() {
+        if (this.tags.includes(PieceTags.Stun2)) {
+            this.tags.delete(PieceTags.Stun2);
+            this.addTag(PieceTags.Stun1);
+        } else if (this.tags.includes(PieceTags.Stun1)) {
+            this.tags.delete(PieceTags.Stun1);
+        }
     }
 }
