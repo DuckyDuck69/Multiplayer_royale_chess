@@ -1,7 +1,7 @@
-import Board from './board.js';
-import Move, { MoveType } from './move.js';
-import Obstacle, { ObstacleType } from './obstacle.js';
-import Piece, { PieceType } from './piece.js';
+import Board from "./board.js";
+import Move, { CastleType, MoveType } from "./move.js";
+import Obstacle, { ObstacleType } from "./obstacle.js";
+import Piece, { PieceType } from "./piece.js";
 
 export const INCREMENT = 1;
 
@@ -11,25 +11,55 @@ const CaptureMode = {
     Any: 0,
     OnlyCapture: 1,
     OnlyMove: 2,
-}
+};
 
 // Vectors for each of the types of movement
-const ORTHOGONAL = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-const DIAGONAL = [[1, 1], [-1, 1], [-1, -1], [1, -1]];
-const KNIGHT = [[2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2], [1, 2]];
+const ORTHOGONAL = [
+    [0, 1],
+    [1, 0],
+    [0, -1],
+    [-1, 0],
+];
+const DIAGONAL = [
+    [1, 1],
+    [-1, 1],
+    [-1, -1],
+    [1, -1],
+];
+const KNIGHT = [
+    [2, 1],
+    [2, -1],
+    [1, -2],
+    [-1, -2],
+    [-2, -1],
+    [-2, 1],
+    [-1, 2],
+    [1, 2],
+];
 
-const DEFAULT_LAYOUT = [PieceType.Rook, PieceType.Knight, PieceType.Bishop, PieceType.Queen, PieceType.King, PieceType.Bishop, PieceType.Knight, PieceType.Rook];
+const DEFAULT_LAYOUT = [
+    PieceType.Rook,
+    PieceType.Knight,
+    PieceType.Bishop,
+    PieceType.Queen,
+    PieceType.King,
+    PieceType.Bishop,
+    PieceType.Knight,
+    PieceType.Rook,
+];
 
 export const BLACK_OWNER = 1;
 export const WHITE_OWNER = 0;
 
 export default class State {
-
     constructor(width = 16, height = 16) {
         this.width = width;
         this.height = height;
 
         this.board = new Board();
+
+        // Map of piece owners to all of the squares attacked by all other owners (to determine checks etc.)
+        this.attackMap = {};
         this.pieces = [];
     }
 
@@ -45,18 +75,42 @@ export default class State {
 
         // state.board.addObstacle(Obstacle.wall(7, 10));
         // state.board.addObstacle(Obstacle.mud(0, 10));
-
+        state.recalculateAttackMap();
         return state;
     }
 
+    allOwners() {
+        return [...new Set(this.pieces.map((piece) => piece.getOwner()))];
+    }
+
+    recalculateAttackMap() {
+        const owners = this.allOwners();
+        this.attackMap = {};
+        for (const owner of owners) {
+            this.attackMap[owner] = [
+                ...new Set(
+                    owners
+                        .filter((other) => other !== owner)
+                        .flatMap((other) =>
+                            this.allMovesFor(other).map((m) =>
+                                m.getCoordinates()
+                            )
+                        )
+                ),
+            ];
+        }
+        console.log(this.attackMap);
+    }
+
     allMovesFor(owner) {
-        return this.pieces.filter(p => p.owner === owner)
-            .flatMap(p => this.pieceMoves(p));
+        return this.pieces
+            .filter((p) => p.owner === owner)
+            .flatMap((p) => this.pieceMoves(p));
     }
 
     // Get piece at x and y coordinates
     pieceAt(x, y) {
-        return this.pieces.find(p => p.getX() === x && p.getY() === y);
+        return this.pieces.find((p) => p.getX() === x && p.getY() === y);
     }
 
     // Returns a MoveType integer:
@@ -69,14 +123,14 @@ export default class State {
             return MoveType.None;
         }
         const obstacles = this.board.obstaclesAt(x, y);
-        if (obstacles.some(o => o.getType() === ObstacleType.Wall)) {
+        if (obstacles.some((o) => o.getType() === ObstacleType.Wall)) {
             return MoveType.None;
         }
-        if (obstacles.some(o => o.getType() === ObstacleType.Mud)) {
+        if (obstacles.some((o) => o.getType() === ObstacleType.Mud)) {
             return MoveType.Capture;
         }
         if (at) {
-            if (at.owner === owner) {
+            if (at.getOwner() === owner) {
                 return MoveType.None;
             } else {
                 return MoveType.Capture;
@@ -86,29 +140,149 @@ export default class State {
         }
     }
 
+    findKing(owner) {
+        return this.pieces.find(
+            (piece) =>
+                piece.getOwner() === owner && piece.getType() === PieceType.King
+        );
+    }
+
+    isUnderAttack(owner, x, y) {
+        console.log(this.attackMap[owner], x, y);
+        return (this.attackMap[owner] || []).some(
+            ([xx, yy]) => xx === x && yy === y
+        );
+    }
+
+    isInCheck(owner) {
+        return this.findKing(owner).inCoordinatesList(this.attackMap[owner]);
+    }
+
     // Return a list of moves that the piece can make
     pieceMoves(piece) {
+        if (this.isInCheck(piece.owner)) {
+            // can only either block, take, or move king
+            return [];
+        } else {
+            return this.uncheckedMoves(piece);
+        }
+    }
+
+    uncheckedMoves(piece) {
         switch (piece.getType()) {
             case PieceType.Rook: {
-                return ORTHOGONAL
-                    .flatMap(([dx, dy]) => this.calculateLineMoves(piece, dx, dy));
+                return ORTHOGONAL.flatMap(([dx, dy]) =>
+                    this.calculateLineMoves(piece, dx, dy)
+                );
             }
             case PieceType.Bishop: {
-                return DIAGONAL
-                    .flatMap(([dx, dy]) => this.calculateLineMoves(piece, dx, dy));
+                return DIAGONAL.flatMap(([dx, dy]) =>
+                    this.calculateLineMoves(piece, dx, dy)
+                );
             }
             case PieceType.Queen: {
-                return [...ORTHOGONAL, ...DIAGONAL]
-                    .flatMap(([dx, dy]) => this.calculateLineMoves(piece, dx, dy));
+                return [...ORTHOGONAL, ...DIAGONAL].flatMap(([dx, dy]) =>
+                    this.calculateLineMoves(piece, dx, dy)
+                );
             }
             case PieceType.King: {
-                return [...ORTHOGONAL, ...DIAGONAL]
-                    .flatMap(([dx, dy]) => this.calculateLineMoves(piece, dx, dy, 1));
+                const moves = [...ORTHOGONAL, ...DIAGONAL].flatMap(([dx, dy]) =>
+                    this.calculateLineMoves(piece, dx, dy, 1).filter(
+                        // Cannot move into check
+                        (move) =>
+                            !move.inCoordinatesList(this.attackMap[piece.owner])
+                    )
+                );
+                if (piece.hasNotMoved()) {
+                    // king side
+                    const kingSideRook = this.pieceAt(piece.x + 3, piece.y);
+                    const kingSideCastlePossible =
+                        kingSideRook &&
+                        kingSideRook.getType() === PieceType.Rook &&
+                        kingSideRook.hasNotMoved() &&
+                        !this.pieceAt(piece.x + 1, piece.y) &&
+                        !this.pieceAt(piece.x + 2, piece.y) &&
+                        !this.isUnderAttack(
+                            piece.owner,
+                            piece.x + 1,
+                            piece.y
+                        ) &&
+                        !this.isUnderAttack(
+                            piece.owner,
+                            piece.x + 2,
+                            piece.y
+                        ) &&
+                        !this.isUnderAttack(piece.owner, piece.x + 3, piece.y);
+
+                    console.log(
+                        this.isUnderAttack(piece.owner, piece.x + 1, piece.y),
+                        this.isUnderAttack(piece.owner, piece.x + 2, piece.y),
+                        this.isUnderAttack(piece.owner, piece.x + 3, piece.y)
+                    );
+
+                    if (kingSideCastlePossible) {
+                        moves.push(
+                            new Move(piece, piece.x + 2, piece.y, {
+                                castle: CastleType.KingSide,
+                            })
+                        );
+                    }
+
+                    const queenSideRook = this.pieceAt(piece.x - 4, piece.y);
+                    const queenSideCastlePossible =
+                        queenSideRook &&
+                        queenSideRook.getType() === PieceType.Rook &&
+                        queenSideRook.hasNotMoved() &&
+                        !this.pieceAt(piece.x - 1, piece.y) &&
+                        !this.pieceAt(piece.x - 2, piece.y) &&
+                        !this.pieceAt(piece.x - 3, piece.y) &&
+                        !this.isUnderAttack(
+                            piece.owner,
+                            piece.x - 1,
+                            piece.y
+                        ) &&
+                        !this.isUnderAttack(
+                            piece.owner,
+                            piece.x - 2,
+                            piece.y
+                        ) &&
+                        !this.isUnderAttack(
+                            piece.owner,
+                            piece.x - 3,
+                            piece.y
+                        ) &&
+                        !this.isUnderAttack(piece.owner, piece.x - 4, piece.y);
+
+                    if (queenSideCastlePossible) {
+                        moves.push(
+                            new Move(piece, piece.x - 2, piece.y, {
+                                castle: CastleType.QueenSide,
+                            })
+                        );
+                    }
+                }
+                return moves;
             }
             case PieceType.Pawn: {
                 return [
-                    ...ORTHOGONAL.flatMap(([dx, dy]) => this.calculateLineMoves(piece, dx, dy, 1, CaptureMode.OnlyMove)),
-                    ...DIAGONAL.flatMap(([dx, dy]) => this.calculateLineMoves(piece, dx, dy, 1, CaptureMode.OnlyCapture))
+                    ...ORTHOGONAL.flatMap(([dx, dy]) =>
+                        this.calculateLineMoves(
+                            piece,
+                            dx,
+                            dy,
+                            piece.hasNotMoved() ? 2 : 1,
+                            CaptureMode.OnlyMove
+                        )
+                    ),
+                    ...DIAGONAL.flatMap(([dx, dy]) =>
+                        this.calculateLineMoves(
+                            piece,
+                            dx,
+                            dy,
+                            1,
+                            CaptureMode.OnlyCapture
+                        )
+                    ),
                 ];
             }
             case PieceType.Knight: {
@@ -120,12 +294,18 @@ export default class State {
                     } else {
                         return null;
                     }
-                }).filter(p => p);
+                }).filter((p) => p);
             }
         }
     }
 
-    calculateLineMoves(piece, dx, dy, maxDistance = 8, captureMode = CaptureMode.Any) {
+    calculateLineMoves(
+        piece,
+        dx,
+        dy,
+        maxDistance = 8,
+        captureMode = CaptureMode.Any
+    ) {
         let distance = 1;
         const moves = [];
         while (distance <= maxDistance) {
@@ -133,9 +313,13 @@ export default class State {
             const moveType = this.pieceCanMoveTo(piece.owner, x, y);
 
             if (moveType !== MoveType.None) {
-                if (captureMode === CaptureMode.Any 
-                    || (captureMode === CaptureMode.OnlyCapture && moveType === MoveType.Capture)
-                    || (captureMode === CaptureMode.OnlyMove && moveType === MoveType.Move)) {
+                if (
+                    captureMode === CaptureMode.Any ||
+                    (captureMode === CaptureMode.OnlyCapture &&
+                        moveType === MoveType.Capture) ||
+                    (captureMode === CaptureMode.OnlyMove &&
+                        moveType === MoveType.Move)
+                ) {
                     moves.push(new Move(piece, x, y));
                 }
             }
@@ -150,14 +334,30 @@ export default class State {
     // Assumes move is valid
     // Returns true if piece is captured
     makeMove(move) {
+        const [pieceX, pieceY] = [
+            move.getPiece().getX(),
+            move.getPiece().getY(),
+        ];
         // ensures we have proper reference to the piece
-        const piece = this.pieceAt(move.getPiece().getX(), move.getPiece().getY());
-        
+        const piece = this.pieceAt(pieceX, pieceY);
+
         const previousLength = this.pieces.length;
-        this.pieces = this.pieces.filter(p => p.getX() !== move.getX() || p.getY() !== move.getY());
+        this.pieces = this.pieces.filter(
+            (p) => p.getX() !== move.getX() || p.getY() !== move.getY()
+        );
 
         piece.moveTo(move.getX(), move.getY());
 
+        if (move.castle) {
+            // assumes that the move is valid, and can castle
+            if (move.castle === CastleType.KingSide) {
+                this.pieceAt(pieceX + 3, pieceY).moveTo(pieceX + 1, pieceY);
+            } else if (move.castle === CastleType.QueenSide) {
+                this.pieceAt(pieceX - 4, pieceY).moveTo(pieceX - 1, pieceY);
+            }
+        }
+
+        this.recalculateAttackMap();
         return this.pieces.length < previousLength;
     }
 
@@ -167,14 +367,13 @@ export default class State {
             for (let j = x; j < x + w; j += 1) {
                 const at = this.pieceAt(j, i);
                 if (at) {
-                    str += at.toString() || 'p';
+                    str += at.toString() || "p";
                 } else {
-                    str += '.';
+                    str += ".";
                 }
             }
             str += "\n";
         }
         return str;
     }
-
 }
