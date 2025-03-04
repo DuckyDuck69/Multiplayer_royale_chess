@@ -9,15 +9,21 @@
         <link rel="stylesheet" href="index.css">
     </head>
     <body>
-        <div id="chessContainer">
-            <canvas id="chessBoard"></canvas>
-        </div>
-        
-        <div id="buttonContainer">
-            <button id="tutorialButton">Tutorial</button>
-        </div>
-        <div id="guideButtonContainer">
-            <button id="guideButton">Game Guide</button>
+        <div class="bg-image"></div>
+        <div class = 'game-container'>
+            <div class = "header">
+                <h1>Welcome to the fantasy world</h1>
+                <div class="subtitle">A Fantasy Chess Adventure</div>
+            </div>
+            <div id="chessContainer">
+                <canvas id="chessBoard"></canvas>
+            </div>
+            <div id="buttonContainer">
+                <button id="tutorialButton">Tutorial</button>
+            </div>
+            <div id="guideButtonContainer">
+                <button id="guideButton">Game Guide</button>
+            </div>
         </div>
         <!-- Game Guide Modal -->
         <div id="guideModal" class="modal">
@@ -109,6 +115,9 @@
                 </div>
             </div>
         </div>
+        <div class="image-credit">
+            @Blue Turtle - Youtube
+         </div>
         
         <script src="index.js" type="module"></script>
 
