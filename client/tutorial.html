@@ -5,14 +5,70 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Chess Royale - Tutorial</title>
         <link rel="stylesheet" href="index.css">
+        <style>
+            
+        </style>
     </head>
     <body>
         <h1>Chess Royale Tutorial</h1>
-        <p>Learn how each piece moves!</p>
-        <canvas id="tutorialCanvas"></canvas>
-        <div id="buttonContainer">
-            <button id="maingameButton">Go back</button>
+        
+        <div class="info-box">
+            <p>Welcome to Chess Royale! This tutorial will help you learn about the special pieces and features that make this game unique. Read about the Fantasy Pieces abilities and skills down below</p>
+            <p><strong>How to play:</strong> Click on a white piece to select it, then click on a highlighted square to move. You can see each piece's abilities by hovering over it.</p>
         </div>
+        
+        <div id="tutorialContainer">
+            <!-- Tutorial navigation and content will be added here by JavaScript -->
+        </div>
+        
+        <canvas id="tutorialCanvas" width="880" height="880"></canvas>
+        
+        <div class="info-box">
+            <h2>Special Pieces</h2>
+            <div class="piece-info">
+                <div class="piece-card">
+                    <img src="assets/textures/light_pegasus.png" alt="">
+                    <img src="assets/textures/dark_pegasus.png" alt="">
+                    <h3>Pegasus</h3>
+                    <p>The Pegasus moves like a Knight but can jump over obstacles like walls. This makes it excellent for navigating through difficult terrain.</p>
+                </div>
+                <div class="piece-card">
+                    <img src="assets/textures/dark_medusa.png" alt="">
+                    <img src="assets/textures/light_medusa.png" alt="">
+                    <h3>Gorgon</h3>
+                    <p>The Gorgon has limited movement (2 squares diagonally or orthogonally), but when it captures a piece, all adjacent pieces are stunned for 2 turns!</p>
+                </div>
+                <div class="piece-card">
+                    <img src="assets/textures/dark_lion_chimera.png" alt="">
+                    <img src="assets/textures/light_goat_chimera.png" alt="">
+                    <img src="assets/textures/light_lion_chimera.png" alt="">
+                    <h3>Chimera (Lion and Goat)</h3>
+                    <p>The Chimera Lion combines the power of the Queen with some Knight-like moves, making it an extremely versatile attacker.</p>
+                </div>
+                <div class="piece-card">
+                    <img src="assets/textures/light_juggernaut.png" alt="">
+                    <img src="assets/textures/dark_juggernaut.png" alt="">
+                    <h3>Juggernaut</h3>
+                    <p>The Lion moves like a Knight, while the Goat moves like a Bishop (limited to 2 squares). They must alternate turns and can move independently but stay within 5-6 tiles. When fully stretched with up to two enemy pieces between them, they snap back, capturing those pieces. If one half is captured, so is the other.
+                    </p>
+                </div>
+                <div class="piece-card">
+                    <h3>Builder</h3>
+                    <p>The Builder can create and remove walls. First move the Builder, then click on an empty square to place a wall or click on an existing wall to remove it.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <h2>Obstacles</h2>
+            <p><strong>Walls:</strong> Walls block movement for most pieces. Only the Pegasus can jump over them, and the Juggernaut can break through them.</p>
+            <p><strong>Mud:</strong> When a piece lands on mud, it must stop its movement. On the next turn, it can move normally. The Juggernaut can move through mud without stopping.</p>
+        </div>
+        
+        <div id="buttonContainer">
+            <button id="maingameButton">Return to Main Game</button>
+        </div>
+        
         <script src="tutorial.js" type="module"></script>
     </body>
 </html>
