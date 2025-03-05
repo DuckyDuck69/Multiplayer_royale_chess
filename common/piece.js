@@ -15,9 +15,7 @@ export const PieceType = {
 };
 
 export const PieceTags = {
-    Stun3: 0,
-    Stun2: 1,
-    Stun1: 2,
+    ChimeraMoveable: 0,
 };
 
 export default class Piece {
@@ -33,8 +31,24 @@ export default class Piece {
         // How many times the piece has moved
         this.moveCount = 0;
 
+        // How many turns this piece is stunned
+        this.stun = 0;
+
+        // Last movement
+        this.lastDx = 0;
+        this.lastDy = 0;
+
         // Piece tags representing state, i.e. "canEnPassant" or "canCastle"
         this.tags = new Set();
+
+        if (this.type === PieceType.Juggernaut) {
+            this.juggernautStrength = 1;
+        } else if (
+            this.type === PieceType.ChimeraGoat ||
+            this.type === PieceType.ChimeraLion
+        ) {
+            this.tags.add(PieceTags.ChimeraMoveable);
+        }
     }
 
     static name(pieceType) {
@@ -52,13 +66,17 @@ export default class Piece {
             case PieceType.Knight:
                 return "N";
             case PieceType.ChimeraLion:
-                return "CL";
+                return "L";
             case PieceType.ChimeraGoat:
-                return "CG";
-            case PieceType.Gorgon:
                 return "G";
+            case PieceType.Gorgon:
+                return "O";
             case PieceType.Pegasus:
                 return "P";
+            case PieceType.Juggernaut:
+                return "J";
+            case PieceType.Builder:
+                return "U";
         }
         return "?";
     }
@@ -79,21 +97,64 @@ export default class Piece {
         return this.moveCount === 0;
     }
 
+    getLastDx() {
+        return this.lastDx;
+    }
+
+    getLastDy() {
+        return this.lastDy;
+    }
+
     moveTo(x, y) {
+        const [prevX, prevY] = [this.x, this.y];
+
         this.x = x;
         this.y = y;
+
         this.moveCount += 1;
 
-        if (this.pieceType === PieceType.Pawn && this.moveCount >= 8) {
+        if (this.getType() === PieceType.Pawn && this.moveCount >= 8) {
             // TODO: Implement underpromotion
-            this.pieceType = PieceType.Queen;
+            this.type = PieceType.Queen;
         }
+
+        const [dx, dy] = [this.x - prevX, this.y - prevY];
+
+        if (this.getType() === PieceType.Juggernaut) {
+            // If the juggernaut keeps moving in the same direction, it gains strength
+            console.log(
+                Math.sign(dx),
+                Math.sign(this.lastDx),
+                Math.sign(dy),
+                Math.sign(this.lastDy)
+            );
+            if (
+                Math.sign(dx) === Math.sign(this.lastDx) &&
+                Math.sign(dy) === Math.sign(this.lastDy)
+            ) {
+                if (this.juggernautStrength < 3) {
+                    this.juggernautStrength += 1;
+                }
+            } else {
+                this.juggernautStrength = 1;
+            }
+        }
+
+        this.lastDx = dx;
+        this.lastDy = dy;
     }
 
     inCoordinatesList(coordinatesList = []) {
         return coordinatesList.some(
             (coordinates) =>
                 this.getX() === coordinates[0] && this.getY() === coordinates[1]
+        );
+    }
+
+    isChimera() {
+        return (
+            this.getType() === PieceType.ChimeraGoat ||
+            this.getType() === PieceType.ChimeraLion
         );
     }
 
@@ -105,23 +166,33 @@ export default class Piece {
         return this.owner;
     }
 
+    hasTag(tag) {
+        return this.tags.has(tag);
+    }
+
     addTag(tag) {
         this.tags.add(tag);
     }
 
+    removeTag(tag) {
+        return this.tags.delete(tag);
+    }
+
     isStunned() {
-        return this.tags.has(PieceTags.Stun1) || this.tags.has(PieceTags.Stun2) || this.tags.has(PieceTags.Stun3);
+        return this.stun > 0;
+    }
+
+    getJuggernautStrength() {
+        return this.juggernautStrength || 0;
+    }
+
+    stunPiece(turns) {
+        this.stun = turns;
     }
 
     update() {
-        if (this.tags.has(PieceTags.Stun3)) {
-            this.tags.delete(PieceTags.Stun3);
-            this.addTag(PieceTags.Stun2);
-        } else if (this.tags.has(PieceTags.Stun2)) {
-            this.tags.delete(PieceTags.Stun2);
-            this.addTag(PieceTags.Stun1);
-        } else if (this.tags.has(PieceTags.Stun1)) {
-            this.tags.delete(PieceTags.Stun1);
+        if (this.isStunned()) {
+            this.stun -= 1;
         }
     }
 }

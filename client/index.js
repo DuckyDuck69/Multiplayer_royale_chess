@@ -5,6 +5,7 @@ import { io } from "socket.io-client";
 // /common directory should be accessible from both the client and server.
 import State, { BLACK_OWNER, INCREMENT, WHITE_OWNER } from "../common/chess";
 import { ObstacleType } from "../common/obstacle";
+import { PieceTags, PieceType } from "../common/piece";
 
 
 console.log("Hello from the browser!");
@@ -24,6 +25,15 @@ const ctx = myCanvas.getContext("2d");
 
 const stunImg = new Image();
 stunImg.src = 'assets/textures/stun.png';
+
+const chimeraMoveableImg = new Image();
+chimeraMoveableImg.src = 'assets/textures/chimera_moveable.png';
+
+const juggernautStrengthImg = [1, 2, 3].map(n => {
+    const image = new Image();
+    image.src = `assets/textures/juggernaut_strength_${n}.png`;
+    return image;
+});
 
 const state = State.default();
 const moveDot= new Image();
@@ -156,7 +166,7 @@ myCanvas.addEventListener('click', () => {
         }
     } else {
         const piece = state.pieceAt(mouseTileX, mouseTileY);
-        if (piece && piece.owner === turn) {
+        if (piece && piece.owner === turn && state.pieceMoves(piece).length > 0) {
             selected = true;
             selectedX = mouseTileX;
             selectedY = mouseTileY;
@@ -209,8 +219,14 @@ function drawPieces(){
             ctx.drawImage(whitePieceImgs[piece.type],piece.x*size,piece.y*size,size,size);
         }
         if (piece.isStunned()) {
-            console.log('yo im stunned fr', piece);
             ctx.drawImage(stunImg,piece.x*size,piece.y*size,size,size);
+        }
+        if(piece.getType() === PieceType.Juggernaut) {
+            ctx.drawImage(juggernautStrengthImg[piece.getJuggernautStrength() - 1], piece.x*size,piece.y*size,size,size);
+        }
+        console.log(piece.isChimera(), piece.hasTag(PieceTags.ChimeraMoveable))
+        if(piece.isChimera() && piece.hasTag(PieceTags.ChimeraMoveable)) {
+            ctx.drawImage(chimeraMoveableImg, piece.x*size,piece.y*size,size,size);
         }
     }
 }
@@ -218,9 +234,7 @@ function drawPieces(){
 function showMoves(){
     const piece = state.pieceAt(Math.floor(selectedX), Math.floor(selectedY));
     if (piece) {
-        console.log(piece);
         const moves = state.pieceMoves(piece);
-        console.log(moves);
         for (const move of moves) {
             ctx.drawImage(moveDot, move.x * size, move.y * size, size, size);
         }

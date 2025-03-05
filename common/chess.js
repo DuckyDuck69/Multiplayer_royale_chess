@@ -107,7 +107,6 @@ export default class State {
                 ),
             ];
         }
-        console.log(this.attackMap);
     }
 
     update() {
@@ -166,8 +165,29 @@ export default class State {
         );
     }
 
+    findChimeraGoat(owner) {
+        return this.pieces.find(
+            (piece) =>
+                piece.getOwner() === owner &&
+                piece.getType() === PieceType.ChimeraGoat
+        );
+    }
+
+    findChimeraLion(owner) {
+        return this.pieces.find(
+            (piece) =>
+                piece.getOwner() === owner &&
+                piece.getType() === PieceType.ChimeraLion
+        );
+    }
+
+    findOtherChimera(piece) {
+        return piece.getType() === PieceType.ChimeraGoat
+            ? this.findChimeraLion(piece.owner)
+            : this.findChimeraGoat(piece.owner);
+    }
+
     isUnderAttack(owner, x, y) {
-        console.log(this.attackMap[owner], x, y);
         return (this.attackMap[owner] || []).some(
             ([xx, yy]) => xx === x && yy === y
         );
@@ -179,6 +199,10 @@ export default class State {
 
     hasLost(owner) {
         return !this.findKing(owner);
+    }
+
+    manhattanDistance(x1, y1, x2, y2) {
+        return Math.abs(x1 - x2) + Math.abs(y1 - y2);
     }
 
     // Return a list of moves that the piece can make
@@ -233,12 +257,6 @@ export default class State {
                             piece.y
                         ) &&
                         !this.isUnderAttack(piece.owner, piece.x + 3, piece.y);
-
-                    console.log(
-                        this.isUnderAttack(piece.owner, piece.x + 1, piece.y),
-                        this.isUnderAttack(piece.owner, piece.x + 2, piece.y),
-                        this.isUnderAttack(piece.owner, piece.x + 3, piece.y)
-                    );
 
                     if (kingSideCastlePossible) {
                         moves.push(
@@ -344,6 +362,103 @@ export default class State {
                     ),
                 ];
             }
+            case PieceType.Builder: {
+                return [...ORTHOGONAL, ...DIAGONAL].flatMap(([dx, dy]) =>
+                    this.calculateLineMoves(
+                        piece,
+                        dx,
+                        dy,
+                        1,
+                        CaptureMode.OnlyMove // Builder cannot capture? That would be kinda cool.
+                    )
+                );
+            }
+            case PieceType.Juggernaut: {
+                return [...ORTHOGONAL, ...DIAGONAL].flatMap(([dx, dy]) => {
+                    const isInDirection =
+                        Math.sign(piece.getLastDx()) === dx &&
+                        Math.sign(piece.getLastDy()) === dy;
+                    const moveCount = isInDirection
+                        ? [0, 1, 3, 6][piece.getJuggernautStrength()]
+                        : 1;
+                    return this.calculateLineMoves(
+                        piece,
+                        dx,
+                        dy,
+                        moveCount,
+                        CaptureMode.Any,
+                        piece.getJuggernautStrength() === 3
+                    );
+                });
+            }
+            case PieceType.ChimeraGoat:
+            case PieceType.ChimeraLion: {
+                const otherChimera = this.findOtherChimera(piece);
+                if (!piece.hasTag(PieceTags.ChimeraMoveable)) {
+                    return [];
+                }
+                const moves = KNIGHT.map(([dx, dy]) => {
+                    const [x, y] = [piece.x + dx, piece.y + dy];
+                    const distanceAfterMove = this.manhattanDistance(
+                        otherChimera.getX(),
+                        otherChimera.getY(),
+                        x,
+                        y
+                    );
+                    if (distanceAfterMove > 8) {
+                        // Chimera twins cannot move that far apart
+                        return null;
+                    }
+                    const moveType = this.pieceCanMoveTo(piece.owner, x, y);
+                    if (moveType !== MoveType.None) {
+                        return new Move(piece, x, y);
+                    } else {
+                        return null;
+                    }
+                }).filter((p) => p);
+
+                console.log('standard moves', moves);
+                // special move
+                if (
+                    (piece.getY() !== otherChimera.getY() ||
+                        piece.getX() !== otherChimera.getX() - 1) &&
+                    piece.getX() < otherChimera.getX()
+                ) {
+                    return [
+                        ...moves.filter(
+                            (m) =>
+                                m.getX() !== otherChimera.getX() - 1 ||
+                                m.getY() !== otherChimera.getY()
+                        ),
+                        new Move(
+                            piece,
+                            otherChimera.getX() - 1,
+                            otherChimera.getY(),
+                            { chimeraSpecial: true }
+                        ),
+                    ];
+                } else if (
+                    (piece.getY() !== otherChimera.getY() ||
+                        piece.getX() !== otherChimera.getX() + 1) &&
+                    piece.getX() > otherChimera.getX()
+                ) {
+                    return [
+                        ...moves.filter(
+                            (m) =>
+                                m.getX() !== otherChimera.getX() + 1 ||
+                                m.getY() !== otherChimera.getY()
+                        ),
+                        new Move(
+                            piece,
+                            otherChimera.getX() + 1,
+                            otherChimera.getY(),
+                            { chimeraSpecial: true }
+                        ),
+                    ];
+                } else {
+                    return moves;
+                }
+            }
         }
         return [];
     }
@@ -353,13 +468,19 @@ export default class State {
         dx,
         dy,
         maxDistance = 8,
-        captureMode = CaptureMode.Any
+        captureMode = CaptureMode.Any,
+        ignoresObstacles = false
     ) {
         let distance = 1;
         const moves = [];
         while (distance <= maxDistance) {
             const [x, y] = [piece.x + dx * distance, piece.y + dy * distance];
-            const moveType = this.pieceCanMoveTo(piece.owner, x, y);
+            const moveType = this.pieceCanMoveTo(
+                piece.owner,
+                x,
+                y,
+                ignoresObstacles
+            );
 
             if (moveType !== MoveType.None) {
                 if (
@@ -380,6 +501,51 @@ export default class State {
         return moves;
     }
 
+    bresenhamsBetween(x1, y1, x2, y2) {
+        let [mx1, mx2] = [Math.min(x1, x2), Math.max(x1, x2)];
+        let [my1, my2] = [Math.min(y1, y2), Math.max(y1, y2)];
+        let [dx, dy] = [mx2 - mx1, my2 - my1];
+        let flipped = false;
+
+        if (dy > dx) {
+            flipped = true;
+
+            let temp = mx1;
+            mx1 = mx2;
+            mx2 = temp;
+
+            temp = my1;
+            my1 = my2;
+            my2 = temp;
+
+            temp = dy;
+            dx = dy;
+            dy = temp;
+        }
+
+        let x = mx1;
+        let y = my1;
+
+        let e = 0;
+        const points = [];
+
+        while (x <= mx2) {
+            console.log(points, x, y, mx1, mx2, my1, my2);
+            if (flipped) {
+                points.push([y, x]);
+            } else {
+                points.push([x, y]);
+            }
+            e += dy;
+            if (2 * e > dx) {
+                y += 1;
+                e -= dx;
+            }
+            x += 1;
+        }
+        return points;
+    }
+
     // Assumes move is valid
     // Returns true if piece is captured
     makeMove(move) {
@@ -391,9 +557,58 @@ export default class State {
         const piece = this.pieceAt(pieceX, pieceY);
 
         const previousLength = this.pieces.length;
+        const capturedPieces = this.pieces.filter(
+            (p) => p.getX() === move.getX() && p.getY() === move.getY()
+        );
         this.pieces = this.pieces.filter(
             (p) => p.getX() !== move.getX() || p.getY() !== move.getY()
         );
+
+        for (const other of capturedPieces) {
+            if (other.isChimera()) {
+                // when a chimera is captured, capture other chimera as well
+                this.pieces = this.pieces.filter(
+                    (p) => p.owner === other.owner && p.isChimera()
+                );
+            }
+        }
+
+        // Builder places wall when moving diagonally
+        if (
+            piece.getType() === PieceType.Builder &&
+            (piece.getX() - move.getX() !== 0 ||
+                piece.getY() - move.getY() !== 0)
+        ) {
+            this.board.addObstacle(Obstacle.wall(piece.getX(), piece.getY()));
+        }
+
+        if (piece.isChimera()) {
+            const otherChimera = this.findOtherChimera(piece);
+            piece.removeTag(PieceTags.ChimeraMoveable);
+            otherChimera.addTag(PieceTags.ChimeraMoveable);
+
+            if (move.chimeraSpecial) {
+                console.log("CHIMERA SPECIAL !!!!!!!!");
+                const points = this.bresenhamsBetween(
+                    piece.getX(),
+                    piece.getY(),
+                    move.getX(),
+                    move.getY()
+                );
+
+                console.log(points);
+
+                // capture all pieces with bresenhams.
+                this.pieces = this.pieces.filter(
+                    (p) =>
+                        p.owner === piece.owner ||
+                        !points.some(
+                            (point) =>
+                                point[0] === p.getX() && point[1] === p.getY()
+                        )
+                );
+            }
+        }
 
         piece.moveTo(move.getX(), move.getY());
 
@@ -408,6 +623,7 @@ export default class State {
 
         const isCapture = this.pieces.length < previousLength;
 
+        // Gorgon stuns local pieces upon capture
         if (piece.getType() === PieceType.Gorgon && isCapture) {
             this.pieces
                 .filter(
@@ -415,7 +631,14 @@ export default class State {
                         Math.abs(p.getX() - piece.getX()) <= 1 &&
                         Math.abs(p.getY() - piece.getY()) <= 1
                 )
-                .forEach((p) => p.addTag(PieceTags.Stun2));
+                .forEach((p) => p.stunPiece(3));
+        }
+
+        if (
+            piece.getType() === PieceType.Juggernaut &&
+            this.board.obstaclesAt(move.getX(), move.getY())
+        ) {
+            this.board.removeObstaclesAt(move.getX(), move.getY());
         }
 
         this.update();

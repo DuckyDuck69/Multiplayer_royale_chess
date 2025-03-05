@@ -17,7 +17,7 @@ export const CastleType = {
 
 // Class to represent a single move
 export default class Move {
-    constructor(piece, x, y, { promoteTo, castle } = {}) {
+    constructor(piece, x, y, { promoteTo, castle, chimeraSpecial } = {}) {
         this.piece = piece;
         this.x = x;
         this.y = y;
@@ -26,7 +26,10 @@ export default class Move {
             this.promoteTo = promoteTo;
         }
         if (castle) {
-            this.castle = castle;
+            this.castle = true;
+        }
+        if (chimeraSpecial) {
+            this.chimeraSpecial = true;
         }
     }
 
