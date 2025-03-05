@@ -576,7 +576,7 @@ export default class State {
         // Builder places wall when moving diagonally
         if (
             piece.getType() === PieceType.Builder &&
-            (piece.getX() - move.getX() !== 0 ||
+            (piece.getX() - move.getX() !== 0 &&
                 piece.getY() - move.getY() !== 0)
         ) {
             this.board.addObstacle(Obstacle.wall(piece.getX(), piece.getY()));

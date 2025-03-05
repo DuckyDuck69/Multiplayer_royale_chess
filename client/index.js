@@ -38,7 +38,7 @@ const juggernautStrengthImg = [1, 2, 3].map(n => {
 const state = State.default();
 const moveDot= new Image();
 moveDot.src = 'assets/textures/move_dot.png';
-const pieceNames = ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king', 'lion_chimera', 'goat_chimera', 'medusa', 'pegasus', 'juggernaut', 'pawn'];
+const pieceNames = ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king', 'lion_chimera', 'goat_chimera', 'medusa', 'pegasus', 'juggernaut', 'builder'];
 const whitePieceImgs = pieceNames.map(name => 'assets/textures/light_' + name + '.png')
     .map(path => {
         const image = new Image();
