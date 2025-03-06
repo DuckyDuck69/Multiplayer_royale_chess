@@ -576,7 +576,7 @@ export default class State {
             if (other.isChimera()) {
                 // when a chimera is captured, capture other chimera as well
                 this.pieces = this.pieces.filter(
-                    (p) => p.owner === other.owner && p.isChimera()
+                    (p) => p.owner !== other.owner || !p.isChimera()
                 );
             }
         }
@@ -596,7 +596,6 @@ export default class State {
             otherChimera.addTag(PieceTags.ChimeraMoveable);
 
             if (move.chimeraSpecial) {
-                console.log("CHIMERA SPECIAL !!!!!!!!");
                 const points = this.bresenhamsBetween(
                     piece.getX(),
                     piece.getY(),
