@@ -39,20 +39,20 @@ const KNIGHT = [
 
 const DEFAULT_LAYOUT = [
     PieceType.Rook,
-    PieceType.Knight,
+    PieceType.Builder,
     PieceType.Pegasus,
-    PieceType.Gorgon,
-    PieceType.Bishop,
     PieceType.ChimeraGoat,
     PieceType.ChimeraLion,
+    PieceType.Knight,
+    PieceType.Bishop,
     PieceType.Queen,
     PieceType.King,
-    PieceType.Builder,
-    PieceType.Juggernaut,
     PieceType.Bishop,
-    PieceType.Gorgon,
-    PieceType.Pegasus,
     PieceType.Knight,
+    PieceType.Gorgon,
+    PieceType.Juggernaut,
+    PieceType.Pegasus,
+    PieceType.Builder,
     PieceType.Rook,
 ];
 
@@ -134,6 +134,13 @@ export default class State {
         if (x < 0 || y < 0 || x >= this.width || y >= this.height) {
             return MoveType.None;
         }
+        if (at) {
+            if (at.getOwner() === owner) {
+                return MoveType.None;
+            } else {
+                return MoveType.Capture;
+            }
+        }
         const obstacles = this.board.obstaclesAt(x, y);
         if (
             !ignoresObstacles &&
@@ -147,15 +154,7 @@ export default class State {
         ) {
             return MoveType.Capture;
         }
-        if (at) {
-            if (at.getOwner() === owner) {
-                return MoveType.None;
-            } else {
-                return MoveType.Capture;
-            }
-        } else {
-            return MoveType.Move;
-        }
+        return MoveType.Move;
     }
 
     findKing(owner) {
