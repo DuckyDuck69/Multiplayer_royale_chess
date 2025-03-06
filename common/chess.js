@@ -416,12 +416,16 @@ export default class State {
                     }
                 }).filter((p) => p);
 
-                console.log('standard moves', moves);
                 // special move
                 if (
                     (piece.getY() !== otherChimera.getY() ||
                         piece.getX() !== otherChimera.getX() - 1) &&
-                    piece.getX() < otherChimera.getX()
+                    piece.getX() < otherChimera.getX() &&
+                    this.pieceCanMoveTo(
+                        piece.owner,
+                        otherChimera.getX() - 1,
+                        otherChimera.getY()
+                    )
                 ) {
                     return [
                         ...moves.filter(
@@ -439,7 +443,12 @@ export default class State {
                 } else if (
                     (piece.getY() !== otherChimera.getY() ||
                         piece.getX() !== otherChimera.getX() + 1) &&
-                    piece.getX() > otherChimera.getX()
+                    piece.getX() > otherChimera.getX() &&
+                    this.pieceCanMoveTo(
+                        piece.owner,
+                        otherChimera.getX() + 1,
+                        otherChimera.getY()
+                    )
                 ) {
                     return [
                         ...moves.filter(
@@ -575,8 +584,8 @@ export default class State {
         // Builder places wall when moving diagonally
         if (
             piece.getType() === PieceType.Builder &&
-            (piece.getX() - move.getX() !== 0 &&
-                piece.getY() - move.getY() !== 0)
+            piece.getX() - move.getX() !== 0 &&
+            piece.getY() - move.getY() !== 0
         ) {
             this.board.addObstacle(Obstacle.wall(piece.getX(), piece.getY()));
         }
