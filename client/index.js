@@ -75,16 +75,21 @@ ctx.scale(devicePixelRatio, devicePixelRatio); //scale according to the API valu
 
 
 let grid = [];
-let columns = 16;
-let rows = 16;
- //imagine clockwised direction where up is on top of your head, then right, then down, and then left
+let columns = 100;
+let rows = 100;
+
+//initialize camera view
+let camX = 0;
+let camY = 0;
+const visibleRows = 16;
+const visibleCols = 16;
 
 let turn = 0;
 
 let mouseTileX = 0, mouseTileY = 0;
 let selected = false, selectedX = 0, selectedY = 0;
 
-let size = (displayHeight / columns);  //calculate the size of each square
+let size = (displayHeight / visibleCols);  //calculate the size of each square
 
 let gridInitialized = false;
 
@@ -98,8 +103,9 @@ class Cell {
         this.isObstacle = false;
     }
     show(color) {
-        let x_coor = this.x * size;
-        let y_coor = this.y * size;
+        let x_coor = (this.x - camX) * size;
+        let y_coor = (this.y - camY) * size;
+        console.log("This is x coor",x_coor)
         ctx.fillStyle = color;
         ctx.fillRect(x_coor, y_coor, size, size);
     }
@@ -193,14 +199,29 @@ function createGrid(){
 }
 
 function colorBoard(){
-    for(let i = 0; i < grid.length; i++){    
-        let row = Math.floor(i / columns);       
-        let col = i % columns;
-        if((row + col) % 2 === 0) {     //if 
-            grid[i].show('#F5DCE0');    //Since grid[i] is a Cell object, we can use the show() method
-        } else {
-            grid[i].show('#E18AAA');
-        }
+    /*
+    Color the visible board
+    */
+    for(let x = camX; x < (camX + visibleCols); x++){   
+        for(let y = camY; y < (camY + visibleRows); y++){
+            let num = x + y * columns;  //retrive the Cell number
+            let row = y;
+            //color differently for even and odd rows since now the board is 100x100 and we only color a part of it
+            if(row % 2 ===0) {     
+                if(num%2 ===0){
+                    grid[num].show('#F5DCE0');    //Since grid[i] is a Cell object, we can use the show() method
+                } else {
+                grid[num].show('#E18AAA');
+                }
+            }
+            else{
+                if(num%2 != 0){
+                    grid[num].show('#F5DCE0');    //Since grid[i] is a Cell object, we can use the show() method
+                } else {
+                    grid[num].show('#E18AAA');
+                }
+            } 
+        }    
     }
 }
 
