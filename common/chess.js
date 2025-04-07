@@ -71,6 +71,25 @@ export default class State {
         this.pieces = [];
     }
 
+    // Prepare state to be sent across network
+    serialize() {
+        const stateObject = { ...this };
+        delete stateObject.attackMap;
+        return stateObject;
+    }
+
+    // Create state from state sent across network
+    static deserialize(from) {
+        const state = new State();
+        state.width = from.width;
+        state.height = from.height;
+        state.board = Board.deserialize(from.board);
+        state.pieces = from.pieces.map((p) => Piece.deserialize(p));
+        state.recalculateAttackMap();
+
+        return state;
+    }
+
     static default() {
         const state = new State();
 
@@ -80,6 +99,8 @@ export default class State {
             state.pieces.push(new Piece(PieceType.Pawn, i, 14, WHITE_OWNER));
             state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 15, WHITE_OWNER));
         }
+
+        state.board = Board.generate();
 
         // state.board.addObstacle(Obstacle.wall(7, 10));
         // state.board.addObstacle(Obstacle.mud(0, 10));

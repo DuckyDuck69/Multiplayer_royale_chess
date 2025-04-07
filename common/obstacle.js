@@ -1,15 +1,18 @@
 export const ObstacleType = {
     Wall: 0,
     Mud: 1, // Allows piece movement to, but cannot move past until another move after.
-}
+};
 
 export default class Obstacle {
-
     constructor(type, x, y, data = {}) {
         this.type = type;
         this.x = x;
         this.y = y;
         this.data = data;
+    }
+
+    static deserialize(from) {
+        return new Obstacle(from.type, from.x, from.y, from.data);
     }
 
     static wall(x, y, w = 1, h = 1) {
@@ -39,5 +42,4 @@ export default class Obstacle {
     getHeight() {
         return this.data.h || 0;
     }
-
 }
