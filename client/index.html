@@ -5,7 +5,7 @@
         <!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
         <!--<meta http-equiv="X-UA-Compatible" content="ie=edge">-->
         <title>Chess Royale</title>
-
+        <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Uncial+Antiqua&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="index.css">
     </head>
     <body>
@@ -123,8 +123,12 @@
         <div class="image-credit">
             @Blue Turtle - Youtube
          </div>
-        
+         <div id="win-screen" style="display: none;" class="win-screen">
+            <h1 id="winner-message"></h1>
+            <button id="play-again-button">Play Again?</button>
+        </div>
+        <button id="win-screen-test">test</button>
+        <script src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"></script>
         <script src="index.js" type="module"></script>
-
     </body>
 </html>

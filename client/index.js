@@ -195,6 +195,13 @@ myCanvas.addEventListener("click", () => {
         if (requestedMove) {
             state.makeMove(requestedMove);
             selected = false;
+            if (state.hasLost(WHITE_OWNER)) {
+                showWinScreen("Black");
+                return;
+            } else if (state.hasLost(BLACK_OWNER)) {
+                showWinScreen("White");
+                return;
+            }
             turn = 1 - turn;
         } else {
             selected = false;
@@ -355,4 +362,38 @@ document.addEventListener("DOMContentLoaded", function () {
             modal.style.display = "none";
         }
     };
+});
+// Win screen
+function showWinScreen(winner) {
+    const canvas = document.getElementById("confetti-screen")
+    const jsConfetti = new JSConfetti({ canvas})
+    const winScreen = document.getElementById("win-screen");
+    const message = document.getElementById("winner-message");
+    document.querySelector('.win-screen').style.display = 'flex';
+    message.textContent = `${winner} Wins!`;
+    document.getElementById("chessContainer").style.border = "none";
+    document.getElementById("chessBoard").style.border = "none";
+    winScreen.style.display = "flex";
+    jsConfetti.addConfetti({
+        confettiColors: ['#ff0a54', '#ff477e', '#ff7096', '#ff85a1', '#fbb1bd', '#f9bec7',],
+        confettiRadius: 6,
+        confettiNumber: 500,
+    })
+}
+
+function restartGame() {
+    // Reset the game state and redraw everything
+    selected = false;
+    turn = WHITE_OWNER;
+    state = State.default(); // Reset to default state
+    drawBoard();
+    document.getElementById("win-screen").style.display = "none";
+}
+
+document.getElementById("play-again-button").addEventListener("click", function() {
+    restartGame();
+});
+
+document.getElementById("win-screen-test").addEventListener("click", function() {
+    showWinScreen("White");
 });
