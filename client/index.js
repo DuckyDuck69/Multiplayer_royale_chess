@@ -103,6 +103,7 @@ let camX = 0;
 let camY = 0;
 const visibleRows = 16;
 const visibleCols = 16;
+let dragSpeed = 1;
 
 let turn = 0;
 
@@ -116,8 +117,13 @@ let size = displayHeight / visibleCols; //calculate the size of each square
 
 let gridInitialized = false;
 
+//declare camera movements
+let isDragging = false;
+let moveStartX = 0, moveStartY = 0;
+let dragTileX, dragTileY;
+
 //create a Cell object, which can be assigned method for later use
-class Cell {
+export default class Cell {
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -128,24 +134,28 @@ class Cell {
     show(color) {
         let x_coor = (this.x - camX) * size;
         let y_coor = (this.y - camY) * size;
-        console.log("This is x coor", x_coor);
         ctx.fillStyle = color;
         ctx.fillRect(x_coor, y_coor, size, size);
     }
-    setWall(color) {
-        //create a new method to color the wall and set the state
+    setWall() {  //create a new method to color the wall and set the state
         this.isWall = true;
-        this.isObstacle = true;
-        this.colorWall = color;
-        this.show(color);
+        this.isObstacle = true
     }
-    setMud(color) {
-        //create a new method to color the wall and set the state
+    setMud() {  //create a new method to color the wall and set the state
         this.isMud = true;
-        this.isObstacle = true;
-        this.colorMud = color;
-        this.show(color);
+        this.isObstacle = true
     }
+}
+
+let needsRedraw = true;
+
+//draw the board at a consistent fps 
+function renderLoop() {
+    if (needsRedraw) {
+        drawBoard();
+        needsRedraw = false;
+    }
+    requestAnimationFrame(renderLoop);
 }
 
 function drawBoard() {
@@ -171,20 +181,98 @@ function drawBoard() {
     }
 }
 
-window.addEventListener("load", function () {
-    //draw the board after the html/css load
+function updateCamera(tileX, tileY){
+    //handle bounds 
+    if( camX + tileX < 0){
+        camX = 0;
+    }else{
+        if( camX + tileX <  (columns - visibleCols)){
+            camX = camX + tileX ;
+        }else{
+            camX = columns - visibleCols;
+        }
+    }
+    if( camY + tileY < 0){
+        camY = 0;
+    }else{
+        if( camY + tileY < (rows - visibleRows)){
+            camY = camY + tileY;
+        }else{
+            camY = rows - visibleRows;
+        }
+    }
+}
+
+window.addEventListener('load', function(){   //draw the board after the html/css load
     createGrid();
     drawBoard();
-    // randomObstacle();
+    //randomObstacle();
 });
 
-myCanvas.addEventListener("mousemove", function (event) {
-    //mouse listener that displays possible moves of pieces when clicked
+myCanvas.addEventListener('mousedown', function(event){
+    /*
+    This function store the x and y position of the client 
+    */
+    isDragging = true;
+
+    moveStartX = event.clientX;  //retrive the client's X cursor position
+    moveStartY = event.clientY;  //retrive the client's Y cursor position
+
+    dragTileX = 0;
+    dragTileY = 0;
+
+    needsRedraw = true;
+    console.log("mousedown");
+})
+
+myCanvas.addEventListener('mousemove',function(event){ //mouse listener that displays possible moves of pieces when clicked 
+    if(isDragging){
+        //get the coordinate after moving the mouse
+
+        const xDistance = (event.clientX - moveStartX);
+        const yDistance = (event.clientY - moveStartY);
+
+        dragTileX += xDistance ;
+        dragTileY += yDistance ;
+
+        const threshold = size;
+
+        //only move if drag pass threshold to avoid issues
+        while(Math.abs(dragTileX) >= threshold){
+            //move 1 tile at a time (current dragspeed value)
+
+            //the minus sign is to treat our dragging cursor movement better since 
+            //we drag from right->left to make the chess move to the right
+            const moveX = dragTileX > 0 ? -dragSpeed : dragSpeed;
+            updateCamera(moveX, 0);
+            console.log("camX:", camX);
+            dragTileX += moveX * threshold;
+
+            needsRedraw = true; //signal that we need to draw the board 
+        }
+        while(Math.abs(dragTileY) >= threshold){
+            //move 1 tile at a time (current dragspeed value)
+            const moveY = dragTileY > 0 ? -dragSpeed : dragSpeed;
+            updateCamera(0, moveY);
+            console.log("camY", camY);
+            dragTileY += moveY * threshold;
+
+            needsRedraw = true;
+        }
+        moveStartX = event.clientX;
+        moveStartY = event.clientY;
+    }
     mouseTileX = Math.floor(event.offsetX / size);
     mouseTileY = Math.floor(event.offsetY / size);
 });
 
-myCanvas.addEventListener("click", () => {
+myCanvas.addEventListener('mouseup', function(event){
+    isDragging = false;  //if the user is not clicking the board, disable the map moving function 
+    needsRedraw = true;
+    console.log("mouseup");
+})
+
+myCanvas.addEventListener('click', () => {
     if (selected) {
         const piece = state.pieceAt(selectedX, selectedY);
         const moves = state.pieceMoves(piece);
@@ -243,80 +331,67 @@ function colorBoard() {
     /*
     Color the visible board
     */
-    for (let x = camX; x < camX + visibleCols; x++) {
-        for (let y = camY; y < camY + visibleRows; y++) {
-            let num = x + y * columns; //retrive the Cell number
-            let row = y;
-            //color differently for even and odd rows since now the board is 100x100 and we only color a part of it
-            if (row % 2 === 0) {
-                if (num % 2 === 0) {
-                    grid[num].show("#F5DCE0"); //Since grid[i] is a Cell object, we can use the show() method
+    for(let x = camX; x < columns; x++){   
+        for(let y = camY; y < rows; y++){
+            let num = x + y * columns;  //retrive the Cell number
+            //color differently for even and odd rows differently
+            if(y % 2 ===0) {     
+                if(num % 2 ===0){
+                    grid[num].show('#F5DCE0');    //Since grid[i] is a Cell object, we can use the show() method
                 } else {
-                    grid[num].show("#E18AAA");
-                }
-            } else {
-                if (num % 2 != 0) {
-                    grid[num].show("#F5DCE0"); //Since grid[i] is a Cell object, we can use the show() method
-                } else {
-                    grid[num].show("#E18AAA");
+                    grid[num].show('#E18AAA');
                 }
             }
-        }
+            else{
+                if(num%2 != 0){
+                    grid[num].show('#F5DCE0');    
+                } else {
+                    grid[num].show('#E18AAA');
+                }
+            } 
+        }    
     }
 }
 
-function drawObstacles() {
+function drawObstacles() {   
     for (const obstacle of state.board.obstacles) {
-        ctx.drawImage(
-            obstacleImages[obstacle.getType()],
-            obstacle.x * size,
-            obstacle.y * size,
-            size,
-            size
-        );
+        //check if the obstacle is within the visible section
+        if( obstacle.x >= camX && obstacle.x < camX + visibleCols &&
+            obstacle.y >= camY && obstacle.y < camY + visibleRows){
+                ctx.drawImage(
+                    obstacleImages[obstacle.getType()], 
+                    (obstacle.x - camX)*size,   //update the coordinate of the obstacles
+                    (obstacle.y - camY)*size, 
+                    size,
+                    size
+                );
+            }
     }
 }
 
-function drawPieces() {
-    for (const piece of state.pieces) {
-        if (piece.owner === BLACK_OWNER) {
-            ctx.drawImage(
-                blackPieceImgs[piece.type],
-                piece.x * size,
-                piece.y * size,
-                size,
-                size
-            );
-        } else {
-            ctx.drawImage(
-                whitePieceImgs[piece.type],
-                piece.x * size,
-                piece.y * size,
-                size,
-                size
-            );
-        }
-        if (piece.isStunned()) {
-            ctx.drawImage(stunImg, piece.x * size, piece.y * size, size, size);
-        }
-        if (piece.getType() === PieceType.Juggernaut) {
-            ctx.drawImage(
-                juggernautStrengthImg[piece.getJuggernautStrength() - 1],
-                piece.x * size,
-                piece.y * size,
-                size,
-                size
-            );
-        }
-        console.log(piece.isChimera(), piece.hasTag(PieceTags.ChimeraMoveable));
-        if (piece.isChimera() && piece.hasTag(PieceTags.ChimeraMoveable)) {
-            ctx.drawImage(
-                chimeraMoveableImg,
-                piece.x * size,
-                piece.y * size,
-                size,
-                size
-            );
+function drawPieces(){
+    for(const piece of state.pieces){
+        //check for pieces' coordinate 
+        if( piece.x >= camX && piece.x < camX + visibleCols &&
+            piece.y >= camY && piece.y < camY + visibleRows){
+                const pieceX = (piece.x - camX) * size;
+                const pieceY = (piece.y - camY) * size;
+                if(piece.owner===BLACK_OWNER){
+                    ctx.drawImage(blackPieceImgs[piece.type],pieceX,pieceY,size,size);
+                }
+                else {
+                    ctx.drawImage(whitePieceImgs[piece.type],pieceX,pieceY,size,size);
+                }
+                if (piece.isStunned()) {
+                    ctx.drawImage(stunImg,pieceX,pieceY,size,size);
+                }
+                if(piece.getType() === PieceType.Juggernaut) {
+                    ctx.drawImage(juggernautStrengthImg[piece.getJuggernautStrength() - 1], pieceX,pieceY,size,size);
+                }
+                console.log(piece.isChimera(), piece.hasTag(PieceTags.ChimeraMoveable))
+                if(piece.isChimera() && piece.hasTag(PieceTags.ChimeraMoveable)) {
+                    ctx.drawImage(chimeraMoveableImg, pieceX,pieceY,size,size);
+                }
         }
     }
 }
@@ -335,8 +410,11 @@ function showMoves() {
 document.getElementById("tutorialButton").addEventListener("click", () => {
     window.location.href = "tutorial.html"; // Redirect to the tutorial page
 });
-///Modal
-document.addEventListener("DOMContentLoaded", function () {
+
+renderLoop();
+
+///Modal 
+ document.addEventListener('DOMContentLoaded', function() {
     // Get the modal
     const modal = document.getElementById("guideModal");
 
