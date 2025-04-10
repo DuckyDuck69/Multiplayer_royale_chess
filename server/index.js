@@ -4,7 +4,7 @@ import express from "express";
 import http from "http";
 
 // We also import the increment value from the common code.
-import { INCREMENT } from "../common/chess.js";
+import State, { INCREMENT } from "../common/chess.js";
 
 // This is how to import a specific item from a javascript module. Similar to
 // `from x import y` in python.
@@ -24,7 +24,6 @@ const io = new Server(server);
 // good to get into the habit of using `let` instead of `var` as `var` has some 
 // strange semantics:
 // https://stackoverflow.com/questions/762011/what-is-the-difference-between-let-and-var
-let number = 5;
 
 /**
  * Ok, this requires a bit more explanation. In JavaScript (and other languages with
@@ -62,28 +61,18 @@ let number = 5;
  * 
  * And it would still work the same.
  */
+
+let nextOwner = 0;
+let state = State.default();
+
 io.on("connection", (socket) => {
     console.log(`${socket.id} connected!`);
 
-    socket.emit("value", number);
+    socket.emit("state", state.serialize());
 
     // Listen for a `message` packet, and display it.
     socket.on("message", (message) => {
         console.log(`Message from: ${socket.id}: ${message}`)
-    })
-
-    // Listen for an `increment` packet. If the increment is valid (matches the
-    // increment value), then increment the number and send that to everyone, else display an error.
-    socket.on("increment", ({ by }) => {
-        if (by === INCREMENT) {
-            number += by;
-            console.log(`${socket.id} incremented the number to ${number}`);
-
-            // Calling io.emit will emit to EVERY connected client.
-            io.emit("value", number);
-        } else {
-            console.error(`${socket.id} attempted to send an invalid increment!`);
-        }
     })
 });
 

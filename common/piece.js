@@ -51,6 +51,13 @@ export default class Piece {
         }
     }
 
+    static deserialize(from) {
+        let piece = new Piece(from.type, from.x, from.y, from.owner);
+        piece = Object.assign(piece, from);
+        piece.tags = new Set(Object.keys(piece.tags));
+        return piece;
+    }
+
     static name(pieceType) {
         switch (pieceType) {
             case PieceType.Rook:

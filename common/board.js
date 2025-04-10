@@ -4,9 +4,16 @@ import Obstacle from "./obstacle.js";
 export default class Board {
     constructor(obstacles = []) {
         this.obstacles = obstacles;
-        this.randomObstacle();
+    }
 
-        console.log(this.obstacles);
+    static generate() {
+        const board = new Board();
+        board.randomObstacle();
+        return board;
+    }
+
+    static deserialize(from) {
+        return new Board(from.obstacles.map((o) => Obstacle.deserialize(o)));
     }
 
     addObstacle(obstacle) {
