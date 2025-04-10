@@ -246,7 +246,7 @@ window.addEventListener("load", function () {
 
 myCanvas.addEventListener("mousedown", function (event) {
     /*
-    This function store the x and y position of the client 
+    This event store the x and y position of the client 
     */
     isDragging = true;
 
@@ -298,8 +298,8 @@ myCanvas.addEventListener("mousemove", function (event) {
         moveStartX = event.clientX;
         moveStartY = event.clientY;
     }
-    mouseTileX = Math.floor(event.offsetX / size);
-    mouseTileY = Math.floor(event.offsetY / size);
+    mouseTileX = Math.floor(event.offsetX / size) + camX;
+    mouseTileY = Math.floor(event.offsetY / size) + camY;
 });
 
 myCanvas.addEventListener("mouseup", function (event) {
@@ -448,7 +448,7 @@ function showMoves() {
     if (piece) {
         const moves = state.pieceMoves(piece);
         for (const move of moves) {
-            ctx.drawImage(moveDot, move.x * size, move.y * size, size, size);
+            ctx.drawImage(moveDot, (move.x - camX) * size + camX, (move.y - camY) * size + camY, size, size);
         }
     }
 }
