@@ -51,10 +51,14 @@ export default class Piece {
         }
     }
 
+    serialize() {
+        return { ...this, tags: [...this.tags.values()] };
+    }
+
     static deserialize(from) {
         let piece = new Piece(from.type, from.x, from.y, from.owner);
         piece = Object.assign(piece, from);
-        piece.tags = new Set(Object.keys(piece.tags));
+        piece.tags = new Set(piece.tags);
         return piece;
     }
 

@@ -73,7 +73,10 @@ export default class State {
 
     // Prepare state to be sent across network
     serialize() {
-        const stateObject = { ...this };
+        const stateObject = {
+            ...this,
+            pieces: this.pieces.map((p) => p.serialize()),
+        };
         delete stateObject.attackMap;
         return stateObject;
     }

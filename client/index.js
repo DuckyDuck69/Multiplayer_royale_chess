@@ -1,4 +1,5 @@
 // This imports the socket.io client code
+import JSum from "jsum";
 import { io } from "socket.io-client";
 
 // This imports the INCREMENT value from the /common/chess.js file. Files in the
@@ -6,6 +7,7 @@ import { io } from "socket.io-client";
 import State, { BLACK_OWNER, INCREMENT, WHITE_OWNER } from "../common/chess";
 import { ObstacleType } from "../common/obstacle";
 import { PieceTags, PieceType } from "../common/piece";
+import Move from "../common/move";
 
 console.log("Hello from the browser!");
 console.log(`The increment is: ${INCREMENT}`);
@@ -14,19 +16,47 @@ console.log(`The increment is: ${INCREMENT}`);
 // the socket.io server).
 const socket = io();
 let state = State.default();
+let owner, stateSum;
 
 // This will be called when the socket gets connected.
 socket.on("connect", () => {
     console.log(`${socket.id} connected!`);
 });
 
-socket.on("state", (newState) => {
-    state = State.deserialize(newState);
+socket.on("state", (data) => {
+    state = State.deserialize(data.state);
+    stateSum = data.sum;
+    owner = data.owner;
     if (!grid.length) {
         createGrid();
     }
     drawBoard();
 });
+
+socket.on("move", (data) => {
+    const { move, sum } = data;
+    const execMove = Move.deserialize(move);
+    state.makeMove(execMove);
+
+    if (
+        execMove.getPiece().getX() === selectedX &&
+        execMove.getPiece().getY() === selectedY
+    ) {
+        selected = false;
+    }
+
+    stateSum = JSum.digest(state, "SHA256", "hex");
+
+    if (stateSum !== sum) {
+        socket.emit("state_request");
+    }
+
+    drawBoard();
+});
+
+function makeMove(move) {
+    socket.emit("move", { move: move.serialize(), sum: stateSum });
+}
 
 const myCanvas = document.getElementById("chessBoard");
 const ctx = myCanvas.getContext("2d");
@@ -104,8 +134,6 @@ let camY = 0;
 const visibleRows = 16;
 const visibleCols = 16;
 
-let turn = 0;
-
 let mouseTileX = 0,
     mouseTileY = 0;
 let selected = false,
@@ -155,20 +183,6 @@ function drawBoard() {
     if (selected) {
         showMoves();
     }
-
-    if (turn === WHITE_OWNER) {
-        ctx.fillStyle = "white";
-        ctx.strokeStyle = "black";
-        ctx.font = "bold 32px sans-serif";
-        ctx.fillText("white's turn.", 10, 600);
-        ctx.strokeText("white's turn.", 10, 600);
-    } else {
-        ctx.fillStyle = "black";
-        ctx.strokeStyle = "white";
-        ctx.font = "bold 32px sans-serif";
-        ctx.fillText("black's turn.", 10, 600);
-        ctx.strokeText("black's turn.", 10, 600);
-    }
 }
 
 window.addEventListener("load", function () {
@@ -193,19 +207,14 @@ myCanvas.addEventListener("click", () => {
         );
 
         if (requestedMove) {
-            state.makeMove(requestedMove);
-            selected = false;
-            turn = 1 - turn;
-        } else {
-            selected = false;
+            // state.makeMove(requestedMove);
+            makeMove(requestedMove);
         }
+
+        selected = false;
     } else {
         const piece = state.pieceAt(mouseTileX, mouseTileY);
-        if (
-            piece &&
-            piece.owner === turn &&
-            state.pieceMoves(piece).length > 0
-        ) {
+        if (piece && state.pieceMoves(piece).length > 0) {
             selected = true;
             selectedX = mouseTileX;
             selectedY = mouseTileY;
@@ -301,7 +310,6 @@ function drawPieces() {
                 size
             );
         }
-        console.log(piece.isChimera(), piece.hasTag(PieceTags.ChimeraMoveable));
         if (piece.isChimera() && piece.hasTag(PieceTags.ChimeraMoveable)) {
             ctx.drawImage(
                 chimeraMoveableImg,

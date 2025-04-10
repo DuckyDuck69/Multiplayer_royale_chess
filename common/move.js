@@ -33,6 +33,14 @@ export default class Move {
         }
     }
 
+    serialize() {
+        return { ...this, piece: this.piece.serialize() };
+    }
+
+    static deserialize(from) {
+        return new Move(Piece.deserialize(from.piece), from.x, from.y, from);
+    }
+
     getPiece() {
         return this.piece;
     }
