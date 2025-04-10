@@ -4,13 +4,13 @@ import { io } from "socket.io-client";
 
 // This imports the INCREMENT value from the /common/chess.js file. Files in the
 // /common directory should be accessible from both the client and server.
-import State, { BLACK_OWNER, INCREMENT, WHITE_OWNER } from "../common/chess";
+import State, { BLACK_OWNER, WHITE_OWNER } from "../common/chess";
 import { ObstacleType } from "../common/obstacle";
 import { PieceTags, PieceType } from "../common/piece";
 import Move from "../common/move";
 
 console.log("Hello from the browser!");
-console.log(`The increment is: ${INCREMENT}`);
+// console.log(`The increment is: ${INCREMENT}`);
 
 // Create a socket.io client instance (this will automatically connect to
 // the socket.io server).
@@ -194,6 +194,8 @@ export default class Cell {
         this.isObstacle = true;
     }
 }
+
+createGrid();
 
 let needsRedraw = true;
 

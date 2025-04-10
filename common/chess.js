@@ -3,7 +3,24 @@ import Move, { CastleType, MoveType } from "./move.js";
 import Obstacle, { ObstacleType } from "./obstacle.js";
 import Piece, { PieceTags, PieceType } from "./piece.js";
 
-export const INCREMENT = 1;
+export const COLORS = [
+    "black",
+    "gray",
+    "silver",
+    "white",
+    "navy",
+    "blue",
+    "teal",
+    "aqua",
+    "green",
+    "lime",
+    "olive",
+    "yellow",
+    "maroon",
+    "red",
+    "purple",
+    "fuchsia",
+];
 
 // A pawn can only capture diagonally and only move orthogonally, this could be
 // applied to other future pieces as well

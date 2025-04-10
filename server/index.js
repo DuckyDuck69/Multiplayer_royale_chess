@@ -2,20 +2,99 @@
 import express from "express";
 import http from "http";
 import JSum from "jsum";
+import { v4 as uuidv4 } from "uuid";
 
 // We also import the increment value from the common code.
-import State, { INCREMENT } from "../common/chess.js";
+import State, { COLORS } from "../common/chess.js";
 
 // This is how to import a specific item from a javascript module. Similar to
 // `from x import y` in python.
 import { Server } from "socket.io";
 import Move from "../common/move.js";
+import { readFile, writeFile } from "fs/promises";
 
 // The port that the web server runs on.
 const PORT = process.env.PORT || 8080;
 
 // This creates our web server. `const` declares a variable that cannot be reassigned.
 const app = express();
+
+// This tells express to send any files in the "dist" directory, which is where parcel
+// outputs its page build files. Basically, if you ask for any file in the "client" directory
+// this will make sure that the file is sent to the user.
+app.use(express.static("dist"));
+
+// This is a little complicated, but this allows us to send data to the server in
+// JSON (JavaScript Object Notaton) to the server.
+app.use(express.json());
+
+let sessions = {};
+let owners = {};
+
+async function saveSessionsAndOwners() {
+    await Promise.all([
+        writeFile("sessions.json", JSON.stringify(sessions)),
+        writeFile("owners.json", JSON.stringify(owners)),
+    ]);
+}
+
+async function loadSessionsAndOwners() {
+    await Promise.all([
+        readFile("sessions.json")
+            .then((f) => (sessions = JSON.parse(f)))
+            .catch((e) => writeFile("sessions.json", "{}")),
+        readFile("owners.json")
+            .then((f) => (owners = JSON.parse(f)))
+            .catch((e) => writeFile("owners.json", "{}")),
+    ]);
+}
+
+await loadSessionsAndOwners();
+
+console.log("sessions and owners loaded!");
+
+function createNewOwner(username, color) {
+    const newId = uuidv4();
+    const newSession = uuidv4();
+
+    const owner = { username, color };
+    owners[newId] = owner;
+    sessions[newSession] = newId;
+
+    io.emit("owners", owners);
+
+    saveSessionsAndOwners();
+    return { session, owner };
+}
+
+app.get("me", (req, res) => {
+    const { session } = req.query;
+    if (session && sessions[session]) {
+        return res
+            .status(200)
+            .json({ exists: true, owner: owners[sessions[session]] });
+    } else {
+        return res.status(200).json({ exists: false, owner: null });
+    }
+});
+
+app.post("new", (req, res) => {
+    const { username, color } = req.body;
+
+    if (
+        username &&
+        username.length < 16 &&
+        username.length > 3 &&
+        color &&
+        COLORS.includes(color)
+    ) {
+        const { session, owner } = createNewOwner();
+        return res.status(200).json({ success, session, owner });
+    } else {
+        return res.status(400).json({ success: false });
+    }
+});
+
 const server = http.createServer(app);
 
 // This creates our socket.io instance for websocket communication.
@@ -26,54 +105,16 @@ const io = new Server(server);
 // strange semantics:
 // https://stackoverflow.com/questions/762011/what-is-the-difference-between-let-and-var
 
-/**
- * Ok, this requires a bit more explanation. In JavaScript (and other languages with
- * "higher-order functions"), functions themselves can be stored in regular variables,
- * or passed as arguments to other functions!
- *
- * As an example:
- * function test() {
- *     return 4;
- * }
- *
- * function runner(func) {
- *      return func();
- * }
- *
- * runner(test) // This will return 4
- *
- * As this is quite a common operation, there is shorthand for creating an "anonymous"
- * function (a function without a name, but that can still be passed around and called).
- * Like this:
- * (arg1, arg2, arg3) => {
- *     *insert javascript here*
- * }
- *
- * In this particular case, whenever a client connects to the socket, it will call a function,
- * passing information along about the socket (including id, ip address, etc), so that we can
- * handle any server operations (load their pieces, send a chat message, etc). That is why
- * the second argument looks the way it does. You could write it the same way like:
- *
- * function handleConnection(socket) {
- *     console.log(`${socket.id} connected!`);
- * }
- *
- * io.on("connection", handleConnection);
- *
- * And it would still work the same.
- */
-
-let nextOwner = 0;
 let state = State.default();
 let stateSum = JSum.digest(state, "SHA256", "hex");
 
 io.on("connection", (socket) => {
     console.log(`${socket.id} connected!`);
-    const owner = nextOwner;
-    nextOwner = 1 - nextOwner;
+    const owner = 0;
 
     socket.emit("state", {
         owner,
+        owners,
         state: state.serialize(),
         sum: stateSum,
     });
@@ -83,6 +124,7 @@ io.on("connection", (socket) => {
         if (stateSum !== data.sum) {
             socket.emit("state", {
                 owner,
+                owners,
                 state: state.serialize(),
                 sum: stateSum,
             });
@@ -100,20 +142,12 @@ io.on("connection", (socket) => {
     socket.on("state_request", () => {
         socket.emit("state", {
             owner,
+            owners,
             state: state.serialize(),
             sum: stateSum,
         });
     });
 });
-
-// This tells express to send any files in the "dist" directory, which is where parcel
-// outputs its page build files. Basically, if you ask for any file in the "client" directory
-// this will make sure that the file is sent to the user.
-app.use(express.static("dist"));
-
-// This is a little complicated, but this allows us to send data to the server in
-// JSON (JavaScript Object Notaton) to the server.
-app.use(express.json());
 
 // This will have the server listen on the port provided at the top of the file.
 server.listen(PORT, () => {
