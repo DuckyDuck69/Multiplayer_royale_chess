@@ -1,3 +1,5 @@
+import JSum from "jsum";
+
 import Board from "./board.js";
 import Move, { CastleType, MoveType } from "./move.js";
 import Obstacle, { ObstacleType } from "./obstacle.js";
@@ -96,6 +98,10 @@ export default class State {
         };
         delete stateObject.attackMap;
         return stateObject;
+    }
+
+    static sum(state) {
+        return JSum.digest(state, "SHA256", "hex");
     }
 
     // Create state from state sent across network

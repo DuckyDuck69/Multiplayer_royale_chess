@@ -1,7 +1,6 @@
 // Import the express package to create our web server.
 import express from "express";
 import http from "http";
-import JSum from "jsum";
 import { v4 as uuidv4 } from "uuid";
 
 // We also import the increment value from the common code.
@@ -12,6 +11,7 @@ import State, { COLORS } from "../common/chess.js";
 import { Server } from "socket.io";
 import Move from "../common/move.js";
 import { readFile, writeFile } from "fs/promises";
+import { readFileSync } from "fs";
 
 // The port that the web server runs on.
 const PORT = process.env.PORT || 8080;
@@ -31,6 +31,14 @@ app.use(express.json());
 let sessions = {};
 let owners = {};
 
+// `let` defines a locally-scoped variable that can be modified (not const). It is
+// good to get into the habit of using `let` instead of `var` as `var` has some
+// strange semantics:
+// https://stackoverflow.com/questions/762011/what-is-the-difference-between-let-and-var
+
+let state = State.default();
+let stateSum = State.sum(state);
+
 async function saveSessionsAndOwners() {
     await Promise.all([
         writeFile("sessions.json", JSON.stringify(sessions)),
@@ -49,7 +57,34 @@ async function loadSessionsAndOwners() {
     ]);
 }
 
-await loadSessionsAndOwners();
+async function loadGame() {
+    await readFile("game.json")
+        .then((f) => {
+            state = State.deserialize(JSON.parse(f));
+            stateSum = State.sum(state);
+        })
+        .catch((e) => writeFile("game.json", "{}"));
+}
+
+async function saveGame() {
+    await writeFile("game.json", JSON.stringify(state.serialize()));
+}
+
+async function load() {
+    await Promise.all([loadSessionsAndOwners(), loadGame()]);
+}
+
+async function save() {
+    await Promise.all([saveSessionsAndOwners(), saveGame()]);
+}
+
+await load();
+
+// Autosave interval
+setInterval(async () => {
+    console.log("autosaving...");
+    await save();
+}, 5 * 60 * 1000);
 
 console.log("sessions and owners loaded!");
 
@@ -100,14 +135,6 @@ const server = http.createServer(app);
 // This creates our socket.io instance for websocket communication.
 const io = new Server(server);
 
-// `let` defines a locally-scoped variable that can be modified (not const). It is
-// good to get into the habit of using `let` instead of `var` as `var` has some
-// strange semantics:
-// https://stackoverflow.com/questions/762011/what-is-the-difference-between-let-and-var
-
-let state = State.default();
-let stateSum = JSum.digest(state, "SHA256", "hex");
-
 io.on("connection", (socket) => {
     console.log(`${socket.id} connected!`);
     const owner = 0;
@@ -134,7 +161,7 @@ io.on("connection", (socket) => {
         console.log(owner, "-", move.toString());
         // TODO: validate
         state.makeMove(move);
-        stateSum = JSum.digest(state, "SHA256", "hex");
+        stateSum = State.sum(state);
 
         io.emit("move", { move: move.serialize(), sum: stateSum });
     });

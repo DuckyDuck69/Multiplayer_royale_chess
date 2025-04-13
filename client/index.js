@@ -1,5 +1,4 @@
 // This imports the socket.io client code
-import JSum from "jsum";
 import { io } from "socket.io-client";
 
 // This imports the INCREMENT value from the /common/chess.js file. Files in the
@@ -62,9 +61,10 @@ socket.on("move", (data) => {
         selected = false;
     }
 
-    stateSum = JSum.digest(state, "SHA256", "hex");
+    stateSum = State.sum(state);
 
     if (stateSum !== sum) {
+        console.warn("client-server desync, requesting full update...");
         socket.emit("state_request");
     }
 
@@ -450,7 +450,13 @@ function showMoves() {
     if (piece) {
         const moves = state.pieceMoves(piece);
         for (const move of moves) {
-            ctx.drawImage(moveDot, (move.x - camX) * size + camX, (move.y - camY) * size + camY, size, size);
+            ctx.drawImage(
+                moveDot,
+                (move.x - camX) * size + camX,
+                (move.y - camY) * size + camY,
+                size,
+                size
+            );
         }
     }
 }
