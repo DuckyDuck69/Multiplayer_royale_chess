@@ -45,6 +45,7 @@ const juggernautStrengthImg = [1, 2, 3].map((n) => {
 
 const moveDot = new Image();
 moveDot.src = "assets/textures/move_dot.png";
+
 const pieceNames = [
     "pawn",
     "knight",
@@ -223,6 +224,7 @@ myCanvas.addEventListener("click", () => {
     if (selected) {
         showMoves();
     }
+    update();
 });
 
 function createGrid() {
@@ -397,3 +399,28 @@ document.getElementById("play-again-button").addEventListener("click", function(
 document.getElementById("win-screen-test").addEventListener("click", function() {
     showWinScreen("White");
 });
+
+//Piece Tracking Menu
+const menu = document.getElementById("piecesMenu")
+for (const piece of state.pieces) {
+    if (piece.owner === WHITE_OWNER) {
+        const pieceButton=document.createElement("button");
+        
+        pieceName = pieceNames[piece.type];
+
+        label=""+pieceName+" at ("+(piece.x+1)+","+(16-piece.y)+")"
+
+        const whitePieceIcon=new Image()
+        whitePieceIcon.src = whitePieceImgs[piece.type].src;
+
+        pieceButton.appendChild(whitePieceIcon);
+        pieceButton.append(label);
+        //pieceButton.onclick = () =>
+        piecesMenu.appendChild(pieceButton);
+    }
+}
+
+//Updates piece position at menu 
+function update(buttonID){
+
+}
