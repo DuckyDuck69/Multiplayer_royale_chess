@@ -298,8 +298,8 @@ myCanvas.addEventListener("mousemove", function (event) {
         moveStartX = event.clientX;
         moveStartY = event.clientY;
     }
-    mouseTileX = Math.floor(event.offsetX / size) + camX;
-    mouseTileY = Math.floor(event.offsetY / size) + camY;
+    mouseTileX = Math.floor((event.offsetX/devicePixelRatio) / size) + camX;
+    mouseTileY = Math.floor((event.offsetY/devicePixelRatio) / size) + camY;
 });
 
 myCanvas.addEventListener("mouseup", function (event) {
@@ -448,7 +448,7 @@ function showMoves() {
     if (piece) {
         const moves = state.pieceMoves(piece);
         for (const move of moves) {
-            ctx.drawImage(moveDot, (move.x - camX) * size + camX, (move.y - camY) * size + camY, size, size);
+            ctx.drawImage(moveDot, (move.x - camX) * size, (move.y - camY) * size, size, size);
         }
     }
 }
