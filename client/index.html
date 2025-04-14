@@ -10,10 +10,14 @@
     </head>
     <body>
         <div class="bg-image"></div>
-        <div class = 'game-container'>
+        <div class = 'game-container'   >
             <div class = "header">
                 <h1>Welcome to the fantasy world</h1>
                 <div class="subtitle">A Fantasy Chess Adventure</div>
+            </div>
+            <div id = "zoomButtons">
+                <button id="zoomIn" onclick="zoomIn()">+</button>
+                <button id="zoomOut" onclick="zoomOut()">-</button>
             </div>
             <div id="chessContainer">
                 <canvas id="chessBoard"></canvas>

@@ -9,7 +9,7 @@ import { ObstacleType } from "../common/obstacle";
 import { PieceTags, PieceType } from "../common/piece";
 import Move from "../common/move";
 
-console.log("Hello from the browser!");
+console.log("Hello from the!");
 console.log(`The increment is: ${INCREMENT}`);
 
 // Create a socket.io client instance (this will automatically connect to
@@ -142,14 +142,14 @@ myCanvas.style.height = displayHeight + "px";
 ctx.scale(devicePixelRatio, devicePixelRatio); //scale according to the API value, in this case 2  //so it scale by a value of 200%
 
 let grid = [];
-let columns = 100;
-let rows = 100;
+export const BOARD_WIDTH = 160;
+export const BOARD_HEIGHT = 160;
 
 //initialize camera view
 let camX = 0;
 let camY = 0;
-const visibleRows = 16;
-const visibleCols = 16;
+let visibleRow = 16;
+let visibleCols = 16;
 let dragSpeed = 1;
 
 let mouseTileX = 0,
@@ -195,6 +195,25 @@ export default class Cell {
     }
 }
 
+function zoomIn(){
+    if(visibleCols <= BOARD_HEIGHT - 2 && visibleCols > 2){
+        visibleCols -= 2;
+        visibleRow -= 2;
+        size = displayHeight / visibleCols 
+        drawBoard();
+    }
+    console.log("zoom in")
+}
+function zoomOut(){
+    console.log("zoom out")
+    if(visibleCols <= BOARD_HEIGHT - 2){
+        visibleCols += 2;
+        visibleRow += 2;
+        size = displayHeight / visibleCols
+        drawBoard();
+    }
+}
+
 let needsRedraw = true;
 
 //draw the board at a consistent fps
@@ -220,19 +239,19 @@ function updateCamera(tileX, tileY) {
     if (camX + tileX < 0) {
         camX = 0;
     } else {
-        if (camX + tileX < columns - visibleCols) {
+        if (camX + tileX < BOARD_WIDTH - visibleCols) {
             camX = camX + tileX;
         } else {
-            camX = columns - visibleCols;
+            camX = BOARD_WIDTH - visibleCols;
         }
     }
     if (camY + tileY < 0) {
         camY = 0;
     } else {
-        if (camY + tileY < rows - visibleRows) {
+        if (camY + tileY < BOARD_HEIGHT - visibleRow) {
             camY = camY + tileY;
         } else {
-            camY = rows - visibleRows;
+            camY = BOARD_HEIGHT - visibleRow;
         }
     }
 }
@@ -242,7 +261,11 @@ window.addEventListener("load", function () {
     createGrid();
     drawBoard();
     //randomObstacle();
+
 });
+
+document.getElementById("zoomIn").addEventListener("click", zoomIn);
+document.getElementById("zoomOut").addEventListener("click", zoomOut);
 
 myCanvas.addEventListener("mousedown", function (event) {
     /*
@@ -340,9 +363,9 @@ myCanvas.addEventListener("click", () => {
 function createGrid() {
     if (!gridInitialized) {
         //only create the grid one time
-        for (let y = 0; y < rows; y++) {
+        for (let y = 0; y < BOARD_HEIGHT; y++) {
             //for each row, iterate for each column
-            for (let x = 0; x < columns; x++) {
+            for (let x = 0; x < BOARD_WIDTH; x++) {
                 let cell = new Cell(x, y); // make new Cell objects
                 grid.push(cell); //push those Cells into the grid
             }
@@ -355,10 +378,10 @@ function colorBoard() {
     /*
     Color the visible board
     */
-    for (let x = camX; x < columns; x++) {
-        for (let y = camY; y < rows; y++) {
-            let num = x + y * columns; //retrive the Cell number
-            //color differently for even and odd rows differently
+    for (let x = camX; x < BOARD_WIDTH; x++) {
+        for (let y = camY; y < BOARD_HEIGHT; y++) {
+            let num = x + y * BOARD_WIDTH; //retrive the Cell number
+            //color differently for even and odd BOARD_HEIGHT differently
             if (y % 2 === 0) {
                 if (num % 2 === 0) {
                     grid[num].show("#F5DCE0"); //Since grid[i] is a Cell object, we can use the show() method
@@ -383,7 +406,7 @@ function drawObstacles() {
             obstacle.x >= camX &&
             obstacle.x < camX + visibleCols &&
             obstacle.y >= camY &&
-            obstacle.y < camY + visibleRows
+            obstacle.y < camY + visibleRow
         ) {
             ctx.drawImage(
                 obstacleImages[obstacle.getType()],
@@ -403,7 +426,7 @@ function drawPieces() {
             piece.x >= camX &&
             piece.x < camX + visibleCols &&
             piece.y >= camY &&
-            piece.y < camY + visibleRows
+            piece.y < camY + visibleRow
         ) {
             const pieceX = (piece.x - camX) * size;
             const pieceY = (piece.y - camY) * size;
@@ -533,3 +556,4 @@ document
     .addEventListener("click", function () {
         showWinScreen("White");
     });
+
