@@ -79,7 +79,7 @@ export const BLACK_OWNER = 1;
 export const WHITE_OWNER = 0;
 
 export default class State {
-    constructor(width = 16, height = 16) {
+    constructor(width = 100, height = 100) {
         this.width = width;
         this.height = height;
 
