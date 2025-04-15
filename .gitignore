@@ -5,3 +5,6 @@
 game.json
 owners.json
 sessions.json
+login.css
+login.html
+login.js

@@ -4,7 +4,7 @@
   "description": "Chess royale project",
   "type": "module",
   "scripts": {
-    "dev:client": "parcel watch --no-cache --log-level warn client/index.html client/tutorial.html",
+    "dev:client": "parcel watch --no-cache --log-level warn client/login.html client/index.html client/tutorial.html",
     "dev:server": "nodemon --quiet --watch server --watch common server/index.js",
     "copy:remove": "rimraf dist",
     "copy:copy": "cpy ./assets ./tutorial.html ../../dist --cwd=./client",

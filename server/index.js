@@ -22,6 +22,9 @@ const app = express();
 // This tells express to send any files in the "dist" directory, which is where parcel
 // outputs its page build files. Basically, if you ask for any file in the "client" directory
 // this will make sure that the file is sent to the user.
+app.get("/", (req, res) => {
+    res.redirect("/login.html");
+  });
 app.use(express.static("dist"));
 
 // This is a little complicated, but this allows us to send data to the server in
@@ -183,3 +186,4 @@ server.listen(PORT, () => {
     // f-string in python.
     console.log(`Server started at: http://localhost:${PORT}`);
 });
+
