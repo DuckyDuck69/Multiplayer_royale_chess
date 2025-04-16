@@ -196,7 +196,7 @@ export default class Cell {
 }
 
 function zoomIn(){
-    if(visibleCols <= BOARD_HEIGHT - 2 && visibleCols > 2){
+    if(visibleCols > 2){
         visibleCols -= 2;
         visibleRow -= 2;
         size = displayHeight / visibleCols 
@@ -207,6 +207,7 @@ function zoomIn(){
 function zoomOut(){
     console.log("zoom out")
     if(visibleCols <= BOARD_HEIGHT - 2){
+        console.log(visibleCols)
         visibleCols += 2;
         visibleRow += 2;
         size = displayHeight / visibleCols

@@ -68,7 +68,7 @@ export default class Board {
         ];
         for(let x =0; x < 10; x++){
             for(let y = 0; y < 10; y++){
-                //generateWall(numWall, minRow,maxRow, wallColor);
+                //generateWall;
                 this.generateObstacles(
                     state,
                     direction_mud, 
