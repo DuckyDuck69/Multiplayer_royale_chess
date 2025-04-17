@@ -402,6 +402,7 @@ document.getElementById("win-screen-test").addEventListener("click", function() 
 
 //Piece Tracking Menu
 const menu = document.getElementById("piecesMenu")
+const pieceButtons = [];
 for (const piece of state.pieces) {
     if (piece.owner === WHITE_OWNER) {
         const pieceButton=document.createElement("button");
