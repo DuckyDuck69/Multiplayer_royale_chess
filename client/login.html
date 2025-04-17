@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fantasy Chess Login</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+
+<body>
+    <div class="video-container">
+        <div class="overlay"></div>
+        <video autoplay muted loop id="bg-video">
+            <source src="assets/video/ChessLanding1.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <div class="content-wrapper">
+        <div class="logo">
+            <h1 class="title">Fantasy Chess</h1>
+        </div>
+        <div class="login-container">
+            <input type="text" id="nickname" placeholder="Enter your nickname" />
+            <button onclick="startGame()">Play</button>
+        </div>
+    </div>
+
+    <div class="updates-box">
+        <h3>Update log</h3>
+        <ul>
+            <li>Massive board</li>
+            <li>Zooming features</li>
+            <li>Login page!</li>
+            <li>Chicken Jerky</li>
+        </ul>
+    </div>
+    <script src="login.js"></script>
+</body>
+
+</html>

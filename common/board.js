@@ -1,14 +1,13 @@
 import Obstacle from "./obstacle.js";
-
 // Holds state about the board such as obstacles (portals? walls?)
 export default class Board {
     constructor(obstacles = []) {
         this.obstacles = obstacles;
     }
 
-    static generate() {
+    static generate(state) {
         const board = new Board();
-        board.randomObstacle();
+        board.randomObstacle(state);
         return board;
     }
 
@@ -42,13 +41,13 @@ export default class Board {
         );
     }
 
-    randomObstacle() {
+    randomObstacle(state) {
         // let wallColor = 'orange';
         // let mudColor = 'brown';
         let minRow = 5;
         let maxRow = 11;
-        let numWall = 7;
-        let numMud = 12;
+        let numWall = 8;
+        let numMud = 13;
         let drawMud = "Mud";
         let drawWall = "Wall";
         const direction_mud = [
@@ -67,46 +66,71 @@ export default class Board {
             [0, 1], //down
             [-1, 0], //left
         ];
-        //generateWall(numWall, minRow,maxRow, wallColor);
-        this.generateObstacles(direction_mud, numMud, minRow, maxRow, drawMud);
-        this.generateObstacles(
-            directions_wall,
-            numWall,
-            minRow,
-            maxRow,
-            drawWall
-        );
+        for(let x =0; x < 10; x++){
+            for(let y = 0; y < 10; y++){
+                //generateWall;
+                this.generateObstacles(
+                    state,
+                    direction_mud, 
+                    x,
+                    y,
+                    numMud, 
+                    minRow, 
+                    maxRow, 
+                    drawMud);
+                //generateMud
+                this.generateObstacles(
+                    state,
+                    directions_wall,
+                    x,
+                    y,
+                    numWall,
+                    minRow,
+                    maxRow,
+                    drawWall
+                );
+            }
+        }
     }
+    
 
-    generateObstacles(directionChoice, number, minRow, maxRow, type) {
+    generateObstacles(state, directionChoice, chunkX, chunkY, number, minRow, maxRow, type) {
         const columns = 16;
         const rows = 16; // todo: unhardcode
+        
+        const boardWidth = 160;
+        const boardHeight = 160;
+        
+        const startX = ((chunkX + 1)*columns - 2) - (chunkX*columns + 2) + 1;  
+        const startY = chunkY*rows + (maxRow - minRow) + 1;
 
-        const startX = 13 - 2 + 1;
-        const startY = maxRow - minRow + 1;
-        let currentX = Math.floor(Math.random() * startX) + 2;
-        let currentY = Math.floor(Math.random() * startY) + minRow;
+        //this is the x and y coordinate locally, only generate in the 16x16 origin board scale
+        const localCols = columns - 4; //available columns to generate obstacle
+        const localRows = maxRow - minRow + 1; //available rows to generate obstacle
+        let localX = Math.floor(Math.random() * localCols) + 2;
+        let localY = Math.floor(Math.random() * localRows) + minRow;
+
+        //convert it to the current chunk on a global scale
+        let currentX = chunkX * columns + localX;
+        let currentY = chunkY * rows + localY;
 
         let ranDirection = Math.floor(Math.random() * directionChoice.length); //random a number between 0 and 7 to access the direction
         let numCell = 0;
         let nextX, nextY;
-        while (numCell < number) {
+
+        let attempts = 0;
+        let maxAttempts = 200;
+        while (numCell < number && attempts <= maxAttempts) {
             // let gridIndex = currentY * columns + currentX;  //choose a Cell to start
-            if (
-                currentX >= 0 &&
-                currentX < columns &&
-                currentY >= 0 &&
-                currentY < rows
-            ) {
+            const inChunk = currentX >= 0 && currentX < boardWidth &&
+                            currentY >= 0 && currentY < boardHeight;
+            if (inChunk) {
                 //if the coordinate is not out of bound
                 // Check if there's a piece at this designated position
                 // const piece = state.pieceAt(currentX, currentY);
-
-                const pieceWouldBeHere = currentY < 2 || currentY > 15 - 2;
-
                 // Only place obscacle if cell is not a piece, wall, or mud)
                 if (
-                    !pieceWouldBeHere &&
+                    !state.pieceAt(currentX, currentY) &&
                     !this.obstaclesAt(currentX, currentY).length
                 ) {
                     if (type == "Mud") {
@@ -118,34 +142,38 @@ export default class Board {
                     }
                 }
             }
-            //create 2 variable to check if the next X and Y is valid
-            ranDirection = Math.floor(Math.random() * directionChoice.length);
-            nextX = currentX + directionChoice[ranDirection][0];
-            nextY = currentY + directionChoice[ranDirection][1];
             // gridIndex = nextY * columns + nextX;
-            let isNextValid = false; //initiallize it to unvalid
-            while (!isNextValid) {
-                if (
-                    nextX >= 0 &&
-                    nextX < columns &&
-                    nextY >= 0 &&
-                    nextY < rows &&
-                    !this.obstaclesAt(nextX, nextY).length
-                ) {
-                    //if the coordinate is not out of bound and that grid is not an obstacle
-                    currentX += directionChoice[ranDirection][0];
-                    currentY += directionChoice[ranDirection][1];
+
+            let isNextValid = false; 
+
+            //loop through and find a valid direction 
+            for(let i = 0; i<directionChoice.length; i++){
+                //create 2 variable to check if the next X and Y is valid
+                ranDirection = Math.floor(Math.random() * directionChoice.length);
+                nextX = currentX + directionChoice[ranDirection][0];
+                nextY = currentY + directionChoice[ranDirection][1];
+
+                let pieceWouldBeHere = state.pieceAt(nextX, nextY) != null;
+                
+                //check the valiation of the next cell
+                const inChunkNext = nextX >= 0 && nextX < boardWidth &&
+                                    nextY >= 0 && nextY < boardHeight;
+                if(inChunkNext && !pieceWouldBeHere && !this.obstaclesAt(nextX, nextY).length){
+                    currentX = nextX;
+                    currentY = nextY;
                     isNextValid = true;
-                } else {
-                    //generate direction until we have a valid grid
-                    ranDirection = Math.floor(
-                        Math.random() * directionChoice.length
-                    );
-                    nextX = currentX + directionChoice[ranDirection][0];
-                    nextY = currentY + directionChoice[ranDirection][1];
-                    // gridIndex = nextY * columns + nextX;
+                    break; //stop if find a valid direction
                 }
             }
+            if(!isNextValid){
+                localX = Math.floor(Math.random() * startX) + 2;
+                localY = Math.floor(Math.random() * startY) + minRow;
+                currentX = chunkX * columns + localX;
+                currentY = chunkY * rows + localY;
+            }
+
+            //try not to have an infinite loop
+            attempts ++;
         }
     }
 }

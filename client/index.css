@@ -27,6 +27,10 @@ body {
     z-index: -2;
 }
 
+#zoomButtons{
+    display: flex;
+}
+
 .bg-image::after {
     content: '';
     position: absolute;
@@ -41,7 +45,6 @@ body {
 .game-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
     position: relative;
     z-index: 1;
 }
@@ -89,7 +92,7 @@ body {
     color:rgb(124, 106, 241);
 }
 
-canvas {
+#chessBoard{
     border: 8px solid;
     border-image: linear-gradient(45deg, #304878, #5a7dbe, #304878) 1;
     box-shadow: 
@@ -261,7 +264,7 @@ p {
 .win-screen {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.95);
+    background: rgba(0, 0, 0, 0.77);
     display: flex;
     flex-direction: column;
     justify-content: center;

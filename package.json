@@ -4,7 +4,7 @@
   "description": "Chess royale project",
   "type": "module",
   "scripts": {
-    "dev:client": "parcel watch --no-cache --log-level warn client/index.html client/tutorial.html",
+    "dev:client": "parcel watch --no-cache --log-level warn client/login.html client/index.html client/tutorial.html",
     "dev:server": "nodemon --quiet --watch server --watch common server/index.js",
     "copy:remove": "rimraf dist",
     "copy:copy": "cpy ./assets ./tutorial.html ../../dist --cwd=./client",
@@ -16,14 +16,23 @@
   "license": "MIT",
   "dependencies": {
     "express": "^4.21.2",
-    "socket.io": "^4.8.1"
+    "jsum": "^2.0.0-alpha.4",
+    "socket.io": "^4.8.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "buffer": "^6.0.3",
     "concurrently": "^9.1.2",
     "cpy-cli": "^5.0.0",
+    "crypto-browserify": "^3.12.1",
+    "events": "^3.3.0",
     "nodemon": "^3.1.9",
     "parcel": "^2.13.3",
+    "process": "^0.11.10",
     "rimraf": "^6.0.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "stream-browserify": "^3.0.0",
+    "string_decoder": "^1.3.0",
+    "vm-browserify": "^1.1.2"
   }
 }

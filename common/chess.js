@@ -1,9 +1,28 @@
+import JSum from "jsum";
+
 import Board from "./board.js";
 import Move, { CastleType, MoveType } from "./move.js";
 import Obstacle, { ObstacleType } from "./obstacle.js";
 import Piece, { PieceTags, PieceType } from "./piece.js";
 
-export const INCREMENT = 1;
+export const COLORS = [
+    "black",
+    "gray",
+    "silver",
+    "white",
+    "navy",
+    "blue",
+    "teal",
+    "aqua",
+    "green",
+    "lime",
+    "olive",
+    "yellow",
+    "maroon",
+    "red",
+    "purple",
+    "fuchsia",
+];
 
 // A pawn can only capture diagonally and only move orthogonally, this could be
 // applied to other future pieces as well
@@ -60,7 +79,7 @@ export const BLACK_OWNER = 1;
 export const WHITE_OWNER = 0;
 
 export default class State {
-    constructor(width = 16, height = 16) {
+    constructor(width = 100, height = 100) {
         this.width = width;
         this.height = height;
 
@@ -73,9 +92,16 @@ export default class State {
 
     // Prepare state to be sent across network
     serialize() {
-        const stateObject = { ...this };
+        const stateObject = {
+            ...this,
+            pieces: this.pieces.map((p) => p.serialize()),
+        };
         delete stateObject.attackMap;
         return stateObject;
+    }
+
+    static sum(state) {
+        return JSum.digest(state, "SHA256", "hex");
     }
 
     // Create state from state sent across network
@@ -100,7 +126,7 @@ export default class State {
             state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 15, WHITE_OWNER));
         }
 
-        state.board = Board.generate();
+        state.board = Board.generate(state);
 
         // state.board.addObstacle(Obstacle.wall(7, 10));
         // state.board.addObstacle(Obstacle.mud(0, 10));
