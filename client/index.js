@@ -214,6 +214,7 @@ function zoomOut(){
         drawBoard();
     }
 }
+createGrid()
 
 let needsRedraw = true;
 
