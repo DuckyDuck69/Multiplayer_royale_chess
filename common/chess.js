@@ -126,7 +126,7 @@ export default class State {
             state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 15, WHITE_OWNER));
         }
 
-        state.board = Board.generate();
+        state.board = Board.generate(state);
 
         // state.board.addObstacle(Obstacle.wall(7, 10));
         // state.board.addObstacle(Obstacle.mud(0, 10));
