@@ -323,8 +323,8 @@ myCanvas.addEventListener("mousemove", function (event) {
         moveStartX = event.clientX;
         moveStartY = event.clientY;
     }
-    mouseTileX = Math.floor((event.offsetX/devicePixelRatio) / size) + camX;
-    mouseTileY = Math.floor((event.offsetY/devicePixelRatio) / size) + camY;
+    mouseTileX = Math.floor((event.offsetX) / size) + camX;
+    mouseTileY = Math.floor((event.offsetY) / size) + camY;
 });
 
 myCanvas.addEventListener("mouseup", function (event) {
