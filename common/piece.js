@@ -38,6 +38,10 @@ export default class Piece {
         this.lastDx = 0;
         this.lastDy = 0;
 
+        // Cooldown
+        this.cooldown = 0;
+        this.cooldownStart = 0;
+
         // Piece tags representing state, i.e. "canEnPassant" or "canCastle"
         this.tags = new Set();
 
@@ -90,6 +94,19 @@ export default class Piece {
                 return "U";
         }
         return "?";
+    }
+
+    static value(pieceType) {
+        switch (pieceType) {
+            case PieceType.King:
+            case PieceType.Pawn:
+                return 1;
+            case PieceType.Knight:
+            case PieceType.Bishop:
+                return 3;
+            default:
+                return 5;
+        }
     }
 
     toString() {
@@ -153,6 +170,26 @@ export default class Piece {
 
         this.lastDx = dx;
         this.lastDy = dy;
+
+        this.addCooldown(Piece.value(this.getType()));
+    }
+
+    addCooldown(seconds) {
+        this.cooldownStart = Date.now();
+        this.cooldown = this.cooldownStart + 1000 * seconds;
+    }
+
+    cooldownSecondsLeft() {
+        return Math.max(0.0, this.cooldown - Date.now());
+    }
+
+    cooldownPercent() {
+        const duration = this.cooldown - this.cooldownStart;
+        return duration > 0 ? this.cooldownSecondsLeft() / duration : 0;
+    }
+
+    isOnCooldown() {
+        return Date.now() < this.cooldown;
     }
 
     inCoordinatesList(coordinatesList = []) {

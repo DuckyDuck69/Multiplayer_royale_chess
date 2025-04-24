@@ -259,6 +259,9 @@ export default class State {
         if (piece.isStunned()) {
             return [];
         }
+        if (piece.isOnCooldown()) {
+            return [];
+        }
         switch (piece.getType()) {
             case PieceType.Rook: {
                 return ORTHOGONAL.flatMap(([dx, dy]) =>
