@@ -561,10 +561,6 @@ document
         showWinScreen("White");
     });
 
-document.getElementById("win-screen-test").addEventListener("click", function() {
-    showWinScreen("White");
-});
-
 //Piece Tracking Menu
 const menu = document.getElementById("piecesMenu")
 const pieceButtons = [];
@@ -574,7 +570,7 @@ for (const piece of state.pieces) {
         
         pieceName = pieceNames[piece.type];
 
-        label=""+pieceName+" at ("+(piece.x+1)+","+(16-piece.y)+")"
+        label=""+pieceName//+" at ("+(piece.x+1)+","+(16-piece.y)+")"
 
         const whitePieceIcon=new Image()
         whitePieceIcon.src = whitePieceImgs[piece.type].src;
