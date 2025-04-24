@@ -1,5 +1,4 @@
 import JSum from "jsum";
-
 import Board from "./board.js";
 import Move, { CastleType, MoveType } from "./move.js";
 import Obstacle, { ObstacleType } from "./obstacle.js";
