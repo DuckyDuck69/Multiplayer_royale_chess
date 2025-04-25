@@ -487,11 +487,12 @@ function cooldownHighLight(){
     console.log("Cooldown function")
     for(const piece of state.pieces){
         if(piece.isOnCooldown()){
+    
+            let fillSize = piece.cooldownPercent() *  size;
             //get Tile num, then color them according to the cooling percent
             const xCoor = (piece.getX() - camX) * size;
-            const yCoor = (piece.getY() - camY) * size;
+            const yCoor = (piece.getY() - camY) * size + (size - fillSize);;
             
-            let fillSize = piece.cooldownPercent() *  size;
             const percent = 1 - piece.cooldownPercent()  //flip it because this method go from 0 to 1
             //math rgb to fade in this order: red -> yellow -> green
             let red, green;
