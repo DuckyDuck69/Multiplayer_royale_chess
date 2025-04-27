@@ -574,12 +574,19 @@ function showWinScreen(winner) {
 }
 
 function restartGame() {
-    // Reset the game state and redraw everything
-    selected = false;
-    turn = WHITE_OWNER;
-    state = State.default(); // Reset to default state
-    drawBoard();
+
     document.getElementById("win-screen").style.display = "none";
+    document.querySelector(".win-screen").style.display = "none";
+    
+    document.getElementById("chessContainer").style.border = ""; // Reset to CSS default
+    document.getElementById("chessBoard").style.border = ""; // Reset to CSS default
+    
+    selected = false;
+    
+    // Request new game state from server
+    socket.emit("restart_game");
+    
+    drawBoard();
 }
 
 document
