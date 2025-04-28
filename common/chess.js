@@ -75,9 +75,9 @@ const DEFAULT_LAYOUT = [
 ];
 
 const MMO_LAYOUT = [
-    [PieceType.Pawn,PieceType.Pawn,PieceType.Pawn],
-    [PieceType.Pawn,PieceType.King,PieceType.Pawn],
-    [PieceType.Pawn,PieceType.Pawn,PieceType.Pawn]
+    [PieceType.Pawn, PieceType.Pawn, PieceType.Pawn],
+    [PieceType.Pawn, PieceType.King, PieceType.Pawn],
+    [PieceType.Pawn, PieceType.Pawn, PieceType.Pawn]
 ];
 
 export const BLACK_OWNER = 1;
@@ -626,6 +626,8 @@ export default class State {
         this.pieces = this.pieces.filter(
             (p) => p.getX() !== move.getX() || p.getY() !== move.getY()
         );
+
+        piece.addXp(this.board.removeResourceAt(move.getX(), move.getY()));
 
         for (const other of capturedPieces) {
             if (other.isChimera()) {
