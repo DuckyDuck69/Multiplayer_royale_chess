@@ -1,18 +1,21 @@
 import Obstacle from "./obstacle.js";
+import Resource from "./resource.js";
 // Holds state about the board such as obstacles (portals? walls?)
 export default class Board {
-    constructor(obstacles = []) {
+    constructor(obstacles = [], resources = []) {
         this.obstacles = obstacles;
+        this.resources = resources;
     }
 
     static generate(state) {
         const board = new Board();
         board.randomObstacle(state);
+        board.randomResource(state);
         return board;
     }
 
     static deserialize(from) {
-        return new Board(from.obstacles.map((o) => Obstacle.deserialize(o)));
+        return new Board(from.obstacles.map((o) => Obstacle.deserialize(o)), from.resources.map((o) => Resource.deserialize(o)));
     }
 
     addObstacle(obstacle) {
@@ -29,6 +32,22 @@ export default class Board {
         );
     }
 
+
+    resourceAt(x, y) {
+        return this.resources.filter(
+            (o) =>
+                x == o.getX() &&
+                y == o.getY()
+        );
+    }
+
+    removeResourceAt(x, y) {
+        const captured = this.resources.filter((r) => (x === r.getX() && y === r.getY()))
+            .reduce((sum, r) => sum + r.getAmount(), 0);
+        this.resources = this.resources.filter((r) => !(x === r.getX() && y === r.getY()));
+        return captured;
+    }
+
     removeObstaclesAt(x, y) {
         this.obstacles = this.obstacles.filter(
             (o) =>
@@ -41,6 +60,19 @@ export default class Board {
         );
     }
 
+    randomResource(state) {
+        for (let i = 0; i < 160 * 160 / 10; i += 1) {
+            let randomX = Math.floor(Math.random() * 160);
+            let randomY = Math.floor(Math.random() * 160);
+
+            while (state.resources.some((r) => r.getX() == randomX && r.getY() == randomY)) {
+                randomX = Math.floor(Math.random() * 160);
+                randomY = Math.floor(Math.random() * 160);
+
+                state.resources.push(new Resource(Resource.randomAmount(), randomX, randomY));
+            }
+        }
+    }
     randomObstacle(state) {
         // let wallColor = 'orange';
         // let mudColor = 'brown';
@@ -66,17 +98,17 @@ export default class Board {
             [0, 1], //down
             [-1, 0], //left
         ];
-        for(let x =0; x < 10; x++){
-            for(let y = 0; y < 10; y++){
+        for (let x = 0; x < 10; x++) {
+            for (let y = 0; y < 10; y++) {
                 //generateWall;
                 this.generateObstacles(
                     state,
-                    direction_mud, 
+                    direction_mud,
                     x,
                     y,
-                    numMud, 
-                    minRow, 
-                    maxRow, 
+                    numMud,
+                    minRow,
+                    maxRow,
                     drawMud);
                 //generateMud
                 this.generateObstacles(
@@ -92,17 +124,17 @@ export default class Board {
             }
         }
     }
-    
+
 
     generateObstacles(state, directionChoice, chunkX, chunkY, number, minRow, maxRow, type) {
         const columns = 16;
         const rows = 16; // todo: unhardcode
-        
+
         const boardWidth = 160;
         const boardHeight = 160;
-        
-        const startX = ((chunkX + 1)*columns - 2) - (chunkX*columns + 2) + 1;  
-        const startY = chunkY*rows + (maxRow - minRow) + 1;
+
+        const startX = ((chunkX + 1) * columns - 2) - (chunkX * columns + 2) + 1;
+        const startY = chunkY * rows + (maxRow - minRow) + 1;
 
         //this is the x and y coordinate locally, only generate in the 16x16 origin board scale
         const localCols = columns - 4; //available columns to generate obstacle
@@ -123,7 +155,7 @@ export default class Board {
         while (numCell < number && attempts <= maxAttempts) {
             // let gridIndex = currentY * columns + currentX;  //choose a Cell to start
             const inChunk = currentX >= 0 && currentX < boardWidth &&
-                            currentY >= 0 && currentY < boardHeight;
+                currentY >= 0 && currentY < boardHeight;
             if (inChunk) {
                 //if the coordinate is not out of bound
                 // Check if there's a piece at this designated position
@@ -144,28 +176,28 @@ export default class Board {
             }
             // gridIndex = nextY * columns + nextX;
 
-            let isNextValid = false; 
+            let isNextValid = false;
 
             //loop through and find a valid direction 
-            for(let i = 0; i<directionChoice.length; i++){
+            for (let i = 0; i < directionChoice.length; i++) {
                 //create 2 variable to check if the next X and Y is valid
                 ranDirection = Math.floor(Math.random() * directionChoice.length);
                 nextX = currentX + directionChoice[ranDirection][0];
                 nextY = currentY + directionChoice[ranDirection][1];
 
                 let pieceWouldBeHere = state.pieceAt(nextX, nextY) != null;
-                
+
                 //check the valiation of the next cell
                 const inChunkNext = nextX >= 0 && nextX < boardWidth &&
-                                    nextY >= 0 && nextY < boardHeight;
-                if(inChunkNext && !pieceWouldBeHere && !this.obstaclesAt(nextX, nextY).length){
+                    nextY >= 0 && nextY < boardHeight;
+                if (inChunkNext && !pieceWouldBeHere && !this.obstaclesAt(nextX, nextY).length) {
                     currentX = nextX;
                     currentY = nextY;
                     isNextValid = true;
                     break; //stop if find a valid direction
                 }
             }
-            if(!isNextValid){
+            if (!isNextValid) {
                 localX = Math.floor(Math.random() * startX) + 2;
                 localY = Math.floor(Math.random() * startY) + minRow;
                 currentX = chunkX * columns + localX;
@@ -173,7 +205,7 @@ export default class Board {
             }
 
             //try not to have an infinite loop
-            attempts ++;
+            attempts++;
         }
     }
 }

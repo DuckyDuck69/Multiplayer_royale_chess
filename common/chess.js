@@ -621,6 +621,8 @@ export default class State {
             (p) => p.getX() !== move.getX() || p.getY() !== move.getY()
         );
 
+        piece.addXp(this.board.removeResourceAt(move.getX(), move.getY()));
+
         for (const other of capturedPieces) {
             if (other.isChimera()) {
                 // when a chimera is captured, capture other chimera as well

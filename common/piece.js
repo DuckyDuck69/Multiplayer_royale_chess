@@ -42,6 +42,9 @@ export default class Piece {
         this.cooldown = 0;
         this.cooldownStart = 0;
 
+        // XP / Leveling
+        this.xp = 0;
+
         // Piece tags representing state, i.e. "canEnPassant" or "canCastle"
         this.tags = new Set();
 
@@ -177,6 +180,10 @@ export default class Piece {
     addCooldown(seconds) {
         this.cooldownStart = Date.now();
         this.cooldown = this.cooldownStart + 1000 * seconds;
+    }
+
+    addXp(amount) {
+        this.xp += amount;
     }
 
     cooldownSecondsLeft() {
