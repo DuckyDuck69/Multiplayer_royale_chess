@@ -40,7 +40,6 @@ socket.on("state", (data) => {
     if (!grid.length) {
         createGrid();
     }
-    drawBoard();
 });
 
 socket.on("move", (data) => {
@@ -69,8 +68,6 @@ socket.on("move", (data) => {
         console.warn("client-server desync, requesting full update...");
         socket.emit("state_request");
     }
-
-    drawBoard();
 });
 
 function makeMove(move) {
@@ -217,7 +214,7 @@ function zoomIn() {
         visibleCols -= 2;
         visibleRow -= 2;
         size = displayHeight / visibleCols
-        drawBoard();
+        needsRedraw = true;
     }
     console.log("zoom in")
 }
@@ -228,7 +225,7 @@ function zoomOut() {
         visibleCols += 2;
         visibleRow += 2;
         size = displayHeight / visibleCols
-        drawBoard();
+        needsRedraw = true; 
     }
 }
 createGrid()
@@ -274,13 +271,57 @@ function updateCamera(tileX, tileY) {
 window.addEventListener("load", function () {
     //draw the board after the html/css load
     createGrid();
-    drawBoard();
     //randomObstacle();
 
 });
+let zoomInInterval = null;
+let zoomOutInterval = null;
+let zoomSpeed = 100;
 
-document.getElementById("zoomIn").addEventListener("click", zoomIn);
-document.getElementById("zoomOut").addEventListener("click", zoomOut);
+document.getElementById("zoomIn").addEventListener("mousedown", function(){
+    zoomIn();
+    zoomInInterval = setInterval(zoomIn, zoomSpeed);
+});
+document.getElementById("zoomIn").addEventListener("mouseup", function(){
+    if (zoomInInterval){
+        clearInterval(zoomInInterval)
+        zoomInInterval = null;
+    }
+    });
+document.getElementById("zoomIn").addEventListener("mouseleave", function(){
+    if (zoomInInterval){
+        clearInterval(zoomInInterval)
+        zoomInInterval = null;
+    }
+    });
+document.getElementById("zoomIn").addEventListener("mouseup", function(){
+    if (zoomInInterval){
+        clearInterval(zoomInInterval)
+        zoomInInterval = null;
+    }
+    });
+document.getElementById("zoomOut").addEventListener("mousedown", function(){
+    zoomOut();
+    zoomOutInterval = setInterval(zoomOut, zoomSpeed);
+});
+document.getElementById("zoomOut").addEventListener("mouseup", function(){
+    if (zoomOutInterval){
+        clearInterval(zoomOutInterval)
+        zoomOutInterval = null;
+    }
+    });
+document.getElementById("zoomOut").addEventListener("mouseleave", function(){
+    if (zoomOutInterval){
+        clearInterval(zoomOutInterval)
+        zoomOutInterval = null;
+    }
+    });
+document.getElementById("zoomOut").addEventListener("mouseup", function(){
+    if (zoomOutInterval){
+        clearInterval(zoomOutInterval)
+        zoomOutInterval = null;
+    }
+    });
 
 myCanvas.addEventListener("mousedown", function (event) {
     /*
@@ -345,7 +386,20 @@ myCanvas.addEventListener("mouseup", function (event) {
     needsRedraw = true;
     console.log("mouseup");
 });
-
+window.addEventListener("mouseup", function(event) {
+    if (isDragging) {
+        isDragging = false;
+        needsRedraw = true;
+        console.log("global mouseup - stopped dragging");
+    }
+});
+myCanvas.addEventListener("mouseleave", function(event) {
+    if (isDragging) {
+        isDragging = false;
+        needsRedraw = true;
+        console.log("mouse left canvas - stopped dragging");
+    }
+});
 myCanvas.addEventListener("click", () => {
     if (selected) {
         const piece = state.pieceAt(selectedX, selectedY);
@@ -369,7 +423,7 @@ myCanvas.addEventListener("click", () => {
         }
     }
 
-    drawBoard();
+    
     if (selected) {
         showMoves();
     }
@@ -621,8 +675,8 @@ function restartGame() {
     
     // Request new game state from server
     socket.emit("restart_game");
-    
-    drawBoard();
+    // needs to redraw the board
+needsRedraw = true;
 }
 
 document
