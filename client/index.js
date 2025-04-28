@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
 // /common directory should be accessible from both the client and server.
 import State, { BLACK_OWNER, WHITE_OWNER } from "../common/chess";
 import { ObstacleType } from "../common/obstacle";
-import { PieceTags, PieceType } from "../common/piece";
+import Piece, { PieceTags, PieceType } from "../common/piece";
 import Move from "../common/move";
 
 console.log("Hello from the browser!");
@@ -170,7 +170,7 @@ let moveStartX = 0,
 let dragTileX, dragTileY;
 
 //create a Cell object, which can be assigned method for later use
-export default class Cell {
+export default class Tile {
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -193,6 +193,12 @@ export default class Cell {
         //create a new method to color the wall and set the state
         this.isMud = true;
         this.isObstacle = true;
+    }
+    toScreenCoor(){
+        return{
+            screenX : (this.x - camX)*size,
+            screenY : (this.y - camY)*size
+        }
     }
 }
 
@@ -221,21 +227,16 @@ let needsRedraw = true;
 
 //draw the board at a consistent fps
 function renderLoop() {
-    if (needsRedraw) {
-        drawBoard();
-        needsRedraw = false;
-    }
-    requestAnimationFrame(renderLoop);
-}
-
-function drawBoard() {
     colorBoard(); //the board has to be drawn first
     drawObstacles(); //draw the obstacle again each time the board is drawn
+    cooldownHighLight();
     drawPieces();
     if (selected) {
         showMoves();
-    }
+    }   
+    requestAnimationFrame(renderLoop);
 }
+
 
 function updateCamera(tileX, tileY) {
     //handle bounds
@@ -362,6 +363,7 @@ myCanvas.addEventListener("click", () => {
         showMoves();
     }
     update();
+    cooldownHighLight();
 });
 
 function createGrid() {
@@ -370,8 +372,8 @@ function createGrid() {
         for (let y = 0; y < BOARD_HEIGHT; y++) {
             //for each row, iterate for each column
             for (let x = 0; x < BOARD_WIDTH; x++) {
-                let cell = new Cell(x, y); // make new Cell objects
-                grid.push(cell); //push those Cells into the grid
+                let tile = new Tile(x, y); // make new Tile objects
+                grid.push(tile); //push those Tile into the grid
             }
         }
         gridInitialized = true; // this function is done after the grid is create
@@ -384,11 +386,12 @@ function colorBoard() {
     */
     for (let x = camX; x < BOARD_WIDTH; x++) {
         for (let y = camY; y < BOARD_HEIGHT; y++) {
-            let num = x + y * BOARD_WIDTH; //retrive the Cell number
+            let num = x + y * BOARD_WIDTH; //retrive the tile number
+
             //color differently for even and odd BOARD_HEIGHT differently
             if (y % 2 === 0) {
                 if (num % 2 === 0) {
-                    grid[num].show("#F5DCE0"); //Since grid[i] is a Cell object, we can use the show() method
+                    grid[num].show("#F5DCE0"); 
                 } else {
                     grid[num].show("#E18AAA");
                 }
@@ -478,6 +481,36 @@ function showMoves() {
             ctx.drawImage(moveDot, (move.x - camX) * size, (move.y - camY) * size, size, size);
         }
     }
+}
+
+function cooldownHighLight(){
+    console.log("Cooldown function")
+    for(const piece of state.pieces){
+        if(piece.isOnCooldown()){
+    
+            let fillSize = piece.cooldownPercent() *  size;
+            //get Tile num, then color them according to the cooling percent
+            const xCoor = (piece.getX() - camX) * size;
+            const yCoor = (piece.getY() - camY) * size + (size - fillSize);;
+            
+            const percent = 1 - piece.cooldownPercent()  //flip it because this method go from 0 to 1
+            //math rgb to fade in this order: red -> yellow -> green
+            let red, green;
+            const blue = 0
+            if (percent < 0.5) {
+                // red to yellow
+                red = 255;
+                green = Math.floor(255 * (percent / 0.5)); // fade green in
+            } else {
+                // yellow to green
+                red = Math.floor(255 * ((1 - percent) / 0.5)); // fade red out
+                green = 255;
+            }
+            ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, 0.6)`
+
+            ctx.fillRect(xCoor, yCoor, size, fillSize);
+        }
+    } 
 }
 
 //button redirection

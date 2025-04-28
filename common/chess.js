@@ -74,6 +74,12 @@ const DEFAULT_LAYOUT = [
     PieceType.Rook,
 ];
 
+const MMO_LAYOUT = [
+    [PieceType.Pawn,PieceType.Pawn,PieceType.Pawn],
+    [PieceType.Pawn,PieceType.King,PieceType.Pawn],
+    [PieceType.Pawn,PieceType.Pawn,PieceType.Pawn]
+];
+
 export const BLACK_OWNER = 1;
 export const WHITE_OWNER = 0;
 
