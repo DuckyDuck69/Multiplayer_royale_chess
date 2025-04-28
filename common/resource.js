@@ -10,7 +10,7 @@ export default class Resource {
         return new Resource(data.amount, data.x, data.y);
     }
 
-    randomAmount() {
+    static randomAmount() {
         const rng = Math.random();
 
         if (rng < 0.1) {

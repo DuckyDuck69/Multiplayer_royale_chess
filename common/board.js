@@ -10,7 +10,7 @@ export default class Board {
     static generate(state) {
         const board = new Board();
         board.randomObstacle(state);
-        board.randomResource(state);
+        board.randomResource();
         return board;
     }
 
@@ -60,17 +60,17 @@ export default class Board {
         );
     }
 
-    randomResource(state) {
+    randomResource() {
         for (let i = 0; i < 160 * 160 / 10; i += 1) {
             let randomX = Math.floor(Math.random() * 160);
             let randomY = Math.floor(Math.random() * 160);
 
-            while (state.resources.some((r) => r.getX() == randomX && r.getY() == randomY)) {
+            while (this.resources.some((r) => r.getX() == randomX && r.getY() == randomY)) {
                 randomX = Math.floor(Math.random() * 160);
                 randomY = Math.floor(Math.random() * 160);
-
-                state.resources.push(new Resource(Resource.randomAmount(), randomX, randomY));
             }
+
+            this.resources.push(new Resource(Resource.randomAmount(), randomX, randomY));
         }
     }
     randomObstacle(state) {

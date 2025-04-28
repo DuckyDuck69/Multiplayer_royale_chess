@@ -17,6 +17,8 @@ const socket = io();
 let state = State.default();
 let owner, stateSum;
 
+const start = Date.now();
+
 // This will be called when the socket gets connected.
 socket.on("connect", () => {
     console.log(`${socket.id} connected!`);
@@ -130,6 +132,14 @@ const obstacleImages = ["mountain", "mud"]
         return image;
     });
 
+const resourceImages = ["resource_1", "resource_2", "resource_5"]
+    .map((name) => `assets/textures/${name}.png`)
+    .map((path) => {
+        const image = new Image();
+        image.src = path;
+        return image;
+    });
+
 console.log(whitePieceImgs);
 
 console.log(state);
@@ -194,26 +204,26 @@ export default class Tile {
         this.isMud = true;
         this.isObstacle = true;
     }
-    toScreenCoor(){
-        return{
-            screenX : (this.x - camX)*size,
-            screenY : (this.y - camY)*size
+    toScreenCoor() {
+        return {
+            screenX: (this.x - camX) * size,
+            screenY: (this.y - camY) * size
         }
     }
 }
 
-function zoomIn(){
-    if(visibleCols > 2){
+function zoomIn() {
+    if (visibleCols > 2) {
         visibleCols -= 2;
         visibleRow -= 2;
-        size = displayHeight / visibleCols 
+        size = displayHeight / visibleCols
         drawBoard();
     }
     console.log("zoom in")
 }
-function zoomOut(){
+function zoomOut() {
     console.log("zoom out")
-    if(visibleCols <= BOARD_HEIGHT - 2){
+    if (visibleCols <= BOARD_HEIGHT - 2) {
         console.log(visibleCols)
         visibleCols += 2;
         visibleRow += 2;
@@ -229,11 +239,12 @@ let needsRedraw = true;
 function renderLoop() {
     colorBoard(); //the board has to be drawn first
     drawObstacles(); //draw the obstacle again each time the board is drawn
+    drawResources();
     cooldownHighLight();
     drawPieces();
     if (selected) {
         showMoves();
-    }   
+    }
     requestAnimationFrame(renderLoop);
 }
 
@@ -391,7 +402,7 @@ function colorBoard() {
             //color differently for even and odd BOARD_HEIGHT differently
             if (y % 2 === 0) {
                 if (num % 2 === 0) {
-                    grid[num].show("#F5DCE0"); 
+                    grid[num].show("#F5DCE0");
                 } else {
                     grid[num].show("#E18AAA");
                 }
@@ -422,6 +433,31 @@ function drawObstacles() {
                 size,
                 size
             );
+        }
+    }
+}
+
+function drawResources() {
+    const rotation = (Date.now() - start) * 0.0001;
+    for (const resource of state.board.resources) {
+        if (
+            resource.x >= camX &&
+            resource.x < camX + visibleCols &&
+            resource.y >= camY &&
+            resource.y < camY + visibleRow
+        ) {
+
+            ctx.translate((resource.x - camX + 0.5) * size, (resource.y - camY + 0.5) * size);
+            ctx.rotate(resource.x + resource.y * 1.22222 + rotation);
+            ctx.drawImage(
+                resourceImages[resource.getAmount() >= 5 ? 2 : (resource.getAmount() === 2 ? 1 : 0)],
+                -0.5 * size,
+                -0.5 * size,
+                size,
+                size
+            );
+            ctx.rotate(-1.0 * (resource.x + resource.y * 1.22222 + rotation));
+            ctx.translate(-(resource.x - camX + 0.5) * size, -(resource.y - camY + 0.5) * size);
         }
     }
 }
@@ -483,16 +519,16 @@ function showMoves() {
     }
 }
 
-function cooldownHighLight(){
+function cooldownHighLight() {
     console.log("Cooldown function")
-    for(const piece of state.pieces){
-        if(piece.isOnCooldown()){
-    
-            let fillSize = piece.cooldownPercent() *  size;
+    for (const piece of state.pieces) {
+        if (piece.isOnCooldown()) {
+
+            let fillSize = piece.cooldownPercent() * size;
             //get Tile num, then color them according to the cooling percent
             const xCoor = (piece.getX() - camX) * size;
             const yCoor = (piece.getY() - camY) * size + (size - fillSize);;
-            
+
             const percent = 1 - piece.cooldownPercent()  //flip it because this method go from 0 to 1
             //math rgb to fade in this order: red -> yellow -> green
             let red, green;
@@ -510,7 +546,7 @@ function cooldownHighLight(){
 
             ctx.fillRect(xCoor, yCoor, size, fillSize);
         }
-    } 
+    }
 }
 
 //button redirection
@@ -599,13 +635,13 @@ const menu = document.getElementById("piecesMenu")
 const pieceButtons = [];
 for (const piece of state.pieces) {
     if (piece.owner === WHITE_OWNER) {
-        const pieceButton=document.createElement("button");
-        
+        const pieceButton = document.createElement("button");
+
         pieceName = pieceNames[piece.type];
 
-        label=""+pieceName//+" at ("+(piece.x+1)+","+(16-piece.y)+")"
+        label = "" + pieceName//+" at ("+(piece.x+1)+","+(16-piece.y)+")"
 
-        const whitePieceIcon=new Image()
+        const whitePieceIcon = new Image()
         whitePieceIcon.src = whitePieceImgs[piece.type].src;
 
         pieceButton.appendChild(whitePieceIcon);
@@ -616,6 +652,6 @@ for (const piece of state.pieces) {
 }
 
 //Updates piece position at menu 
-function update(buttonID){
+function update(buttonID) {
 
 }

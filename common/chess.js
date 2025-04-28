@@ -75,9 +75,9 @@ const DEFAULT_LAYOUT = [
 ];
 
 const MMO_LAYOUT = [
-    [PieceType.Pawn,PieceType.Pawn,PieceType.Pawn],
-    [PieceType.Pawn,PieceType.King,PieceType.Pawn],
-    [PieceType.Pawn,PieceType.Pawn,PieceType.Pawn]
+    [PieceType.Pawn, PieceType.Pawn, PieceType.Pawn],
+    [PieceType.Pawn, PieceType.King, PieceType.Pawn],
+    [PieceType.Pawn, PieceType.Pawn, PieceType.Pawn]
 ];
 
 export const BLACK_OWNER = 1;
