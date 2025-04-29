@@ -14,7 +14,7 @@ console.log("Hello from the browser!");
 // Create a socket.io client instance (this will automatically connect to
 // the socket.io server).
 const socket = io();
-let state = State.default();
+let state = State.mmo();
 let owner, stateSum;
 
 const start = Date.now();
@@ -692,7 +692,7 @@ document
     });
 
 //Piece Tracking Menu
-const menu = document.getElementById("piecesMenu")
+//const menu = document.getElementById("whitePiecesMenu")
 const pieceButtons = [];
 for (const piece of state.pieces) {
     if (piece.owner === WHITE_OWNER) {
@@ -700,7 +700,7 @@ for (const piece of state.pieces) {
 
         pieceName = pieceNames[piece.type];
 
-        label = "" + pieceName//+" at ("+(piece.x+1)+","+(16-piece.y)+")"
+        label = "" + pieceName+" at ("+(piece.x+1)+","+(piece.y)+")"
 
         const whitePieceIcon = new Image()
         whitePieceIcon.src = whitePieceImgs[piece.type].src;
@@ -708,7 +708,22 @@ for (const piece of state.pieces) {
         pieceButton.appendChild(whitePieceIcon);
         pieceButton.append(label);
         //pieceButton.onclick = () =>
-        piecesMenu.appendChild(pieceButton);
+        whitePiecesMenu.appendChild(pieceButton);
+    }
+    else if (piece.owner === BLACK_OWNER) {
+        const pieceButton = document.createElement("button");
+
+        pieceName = pieceNames[piece.type];
+
+        label = "" + pieceName+" at ("+(piece.x+1)+","+(piece.y)+")"
+
+        const blackPieceIcon = new Image()
+        blackPieceIcon.src = blackPieceImgs[piece.type].src;
+
+        pieceButton.appendChild(blackPieceIcon);
+        pieceButton.append(label);
+        //pieceButton.onclick = () =>
+        blackPiecesMenu.appendChild(pieceButton);
     }
 }
 

@@ -134,20 +134,42 @@ export default class State {
         return state;
     }
 
-    //Generates state for MMO format, x & y represent King's position
-    static mmo(x,y,owner) {
+    //Generates state for MMO layout, x & y represent King's position
+    static mmo() {
         const state = new State();
-        //left column
-        for (let c=0; c<3; c+=1) {
-                state.piece.push(new Piece(PieceType.Pawn, x-1, y-1+c, owner));
-        }
-        //center column
-        state.piece.push(new Piece(PieceType.Pawn, x, y-1, owner));
-        state.piece.push(new Piece(PieceType.King, x, y, owner));
-        state.piece.push(new Piece(PieceType.Pawn, x, y+1, owner));
-        //right column
-        for (let c=0; c<3; c+=1) {
-            state.piece.push(new Piece(PieceType.Pawn, x-1, y-1+c, owner));
+
+        for (let o=0; o<2; o+=1) {
+
+            const ranX=Math.floor(Math.random()*(14))+1;
+            if(state.pieces.length>0) {
+                while(ranX===state.pieces[0].getX()) {
+                    ranX=Math.floor(Math.random()*(14))+1;
+                }
+            }
+            //console.log("RanX: "+ranX);
+
+
+            const ranY=-Math.floor(Math.random()*(14))+1;
+            if(state.pieces.length>0) {
+                while(ranY===state.pieces[0].getY()) {
+                    ranY=-Math.floor(Math.random()*(14))+1;
+                }
+            }
+            //console.log("RanY: "+ranY);
+            
+
+            //left column
+            for (let r=0; r<3; r+=1) {
+                state.pieces.push(new Piece(PieceType.Pawn, ranX-1, ranY-1+r, o));
+            }
+            //center column
+            state.pieces.push(new Piece(PieceType.Pawn, ranX, ranY-1, o));
+            state.pieces.push(new Piece(PieceType.King, ranX, ranY, o));
+            state.pieces.push(new Piece(PieceType.Pawn, ranX, ranY+1, o));
+            //right column
+            for (let r=0; r<3; r+=1) {
+                state.pieces.push(new Piece(PieceType.Pawn, ranX-1, ranY-1+r, o));
+            }
         }
 
         state.board=Board.generate(state);
