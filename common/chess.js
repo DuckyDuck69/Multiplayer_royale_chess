@@ -3,6 +3,7 @@ import Board from "./board.js";
 import Move, { CastleType, MoveType } from "./move.js";
 import Obstacle, { ObstacleType } from "./obstacle.js";
 import Piece, { PieceTags, PieceType } from "./piece.js";
+import { resourceUsage } from "process";
 
 export const COLORS = [
     "black",
@@ -74,12 +75,6 @@ const DEFAULT_LAYOUT = [
     PieceType.Rook,
 ];
 
-const MMO_LAYOUT = [
-    [PieceType.Pawn, PieceType.Pawn, PieceType.Pawn],
-    [PieceType.Pawn, PieceType.King, PieceType.Pawn],
-    [PieceType.Pawn, PieceType.Pawn, PieceType.Pawn]
-];
-
 export const BLACK_OWNER = 1;
 export const WHITE_OWNER = 0;
 
@@ -138,6 +133,28 @@ export default class State {
         state.recalculateAttackMap();
         return state;
     }
+
+    //Generates state for MMO format, x & y represent King's position
+    static mmo(x,y,owner) {
+        const state = new State();
+        //left column
+        for (let c=0; c<3; c+=1) {
+                state.piece.push(new Piece(PieceType.Pawn, x-1, y-1+c, owner));
+        }
+        //center column
+        state.piece.push(new Piece(PieceType.Pawn, x, y-1, owner));
+        state.piece.push(new Piece(PieceType.King, x, y, owner));
+        state.piece.push(new Piece(PieceType.Pawn, x, y+1, owner));
+        //right column
+        for (let c=0; c<3; c+=1) {
+            state.piece.push(new Piece(PieceType.Pawn, x-1, y-1+c, owner));
+        }
+
+        state.board=Board.generate(state);
+        state.recalculateAttackMap();
+        return state;
+    }
+
 
     allOwners() {
         return [...new Set(this.pieces.map((piece) => piece.getOwner()))];
