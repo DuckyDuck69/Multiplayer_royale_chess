@@ -290,6 +290,10 @@ export default class Piece {
         return this.type;
     }
 
+    getXP() {
+        return this.xp;
+    }
+
     getOwner() {
         return this.owner;
     }

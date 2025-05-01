@@ -22,8 +22,28 @@
             <h1 class="title">Fantasy Chess</h1>
         </div>
         <div class="login-container">
-            <input type="text" id="nickname" placeholder="Enter your nickname" />
-            <button onclick="startGame()">Play</button>
+            <div class="login-row">
+                <input type="text" id="nickname" placeholder="Enter your nickname" />
+                <select id="color">
+                    <option value="0">Black</option>
+                    <option value="1">Gray</option>
+                    <option value="2">Silver</option>
+                    <option value="3">White</option>
+                    <option value="4">Navy</option>
+                    <option value="5">Blue</option>
+                    <option value="6">Teal</option>
+                    <option value="7">Aqua</option>
+                    <option value="8">Green</option>
+                    <option value="9">Lime</option>
+                    <option value="10">Olive</option>
+                    <option value="11">Yellow</option>
+                    <option value="12">Maroon</option>
+                    <option value="13">Red</option>
+                    <option value="14">Purple</option>
+                    <option value="15">Fuchsia</option>
+                </select>
+            </div>
+            <button id="start">Play</button>
         </div>
     </div>
 
@@ -36,7 +56,7 @@
             <li>Chicken Jerky</li>
         </ul>
     </div>
-    <script src="login.js"></script>
+    <script src="login.js" type="module"></script>
 </body>
 
 </html>
