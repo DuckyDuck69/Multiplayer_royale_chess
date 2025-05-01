@@ -239,6 +239,7 @@ function renderLoop() {
     drawResources();
     cooldownHighLight();
     drawPieces();
+    pieceMenu();
     if (selected) {
         showMoves();
     }
@@ -676,7 +677,7 @@ function restartGame() {
     // Request new game state from server
     socket.emit("restart_game");
     // needs to redraw the board
-needsRedraw = true;
+    needsRedraw = true;
 }
 
 document
@@ -693,41 +694,45 @@ document
 
 //Piece Tracking Menu
 //const menu = document.getElementById("whitePiecesMenu")
-const pieceButtons = [];
-for (const piece of state.pieces) {
-    if (piece.owner === WHITE_OWNER) {
+
+function pieceMenu(){
+    const pieceButtons = [];
+    whitePiecesMenu.innerHTML = "";
+    blackPiecesMenu.innerHTML = "";
+    for (const piece of state.pieces) {
         const pieceButton = document.createElement("button");
 
         pieceName = pieceNames[piece.type];
 
-        label = "" + pieceName+" at ("+(piece.x+1)+","+(piece.y)+")"
+        const pieceIcon = new Image();
+        pieceIcon.src = (piece.owner === WHITE_OWNER ? whitePieceImgs : blackPieceImgs)[piece.type].src;
 
-        const whitePieceIcon = new Image()
-        whitePieceIcon.src = whitePieceImgs[piece.type].src;
+        let percent = Math.floor(piece.cooldownPercent() * 100)
+        const percentSpan = document.createElement("span");
+        percentSpan.textContent = ` ${percent}%`;
+        //create a DOM note to use appendChild
+        const label = document.createTextNode(`${pieceName} at (${piece.getX()},${piece.getY()})`);
 
-        pieceButton.appendChild(whitePieceIcon);
-        pieceButton.append(label);
-        //pieceButton.onclick = () =>
-        whitePiecesMenu.appendChild(pieceButton);
-    }
-    else if (piece.owner === BLACK_OWNER) {
-        const pieceButton = document.createElement("button");
+        pieceButton.appendChild(pieceIcon);
+        pieceButton.appendChild(label);
+        pieceButton.appendChild(percentSpan);
 
-        pieceName = pieceNames[piece.type];
+        if(piece.owner === WHITE_OWNER){
+            whitePiecesMenu.appendChild(pieceButton);
+        }else{
+            blackPiecesMenu.appendChild(pieceButton)
+        }
 
-        label = "" + pieceName+" at ("+(piece.x+1)+","+(piece.y)+")"
-
-        const blackPieceIcon = new Image()
-        blackPieceIcon.src = blackPieceImgs[piece.type].src;
-
-        pieceButton.appendChild(blackPieceIcon);
-        pieceButton.append(label);
-        //pieceButton.onclick = () =>
-        blackPiecesMenu.appendChild(pieceButton);
+        //color the button accordingly base on the percent 
+        if(percent >= 75){
+            pieceButton.style.backgroundColor= 'red'
+        }else if(percent > 25 && percent < 75){
+            pieceButton.style.backgroundColor = 'yellow'
+        }else{
+            pieceButton.style.backgroundColor= 'green'
+        }
     }
 }
+pieceMenu();
 
-//Updates piece position at menu 
-function update(buttonID) {
-
-}
+renderLoop();
