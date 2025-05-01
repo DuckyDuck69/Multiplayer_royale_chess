@@ -140,7 +140,7 @@ export default class State {
 
         for (let o=0; o<2; o+=1) {
 
-            const ranX=Math.floor(Math.random()*(14))+1;
+            let ranX=Math.floor(Math.random()*(14))+1;
             if(state.pieces.length>0) {
                 while(ranX===state.pieces[0].getX()) {
                     ranX=Math.floor(Math.random()*(14))+1;
@@ -149,10 +149,10 @@ export default class State {
             //console.log("RanX: "+ranX);
 
 
-            const ranY=-Math.floor(Math.random()*(14))+1;
+            let ranY=Math.floor(Math.random()*(14))+1;
             if(state.pieces.length>0) {
                 while(ranY===state.pieces[0].getY()) {
-                    ranY=-Math.floor(Math.random()*(14))+1;
+                    ranY=Math.floor(Math.random()*(14))+1;
                 }
             }
             //console.log("RanY: "+ranY);
@@ -168,7 +168,7 @@ export default class State {
             state.pieces.push(new Piece(PieceType.Pawn, ranX, ranY+1, o));
             //right column
             for (let r=0; r<3; r+=1) {
-                state.pieces.push(new Piece(PieceType.Pawn, ranX-1, ranY-1+r, o));
+                state.pieces.push(new Piece(PieceType.Pawn, ranX+1, ranY-1+r, o));
             }
         }
 

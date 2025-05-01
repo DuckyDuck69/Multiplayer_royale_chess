@@ -39,7 +39,7 @@ let owners = {};
 // strange semantics:
 // https://stackoverflow.com/questions/762011/what-is-the-difference-between-let-and-var
 
-let state = State.default();
+let state = State.mmo();
 let stateSum = State.sum(state);
 
 async function saveSessionsAndOwners() {
