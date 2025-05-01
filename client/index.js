@@ -696,14 +696,19 @@ document
 //const menu = document.getElementById("whitePiecesMenu")
 
 function pieceMenu(){
-    const pieceButtons = [];
+    const pieceButtons = [];    
     whitePiecesMenu.innerHTML = "";
     blackPiecesMenu.innerHTML = "";
     for (const piece of state.pieces) {
         const pieceButton = document.createElement("button");
+        const upButton = document.createElement("button");
+        upButton.innerHTML = "UPGRADE"
+        upButton.style.height = '100%'
+        upButton.style.width = '100%'
+        upButton.style.background = '#8922c1'
 
         pieceName = pieceNames[piece.type];
-
+        
         const pieceIcon = new Image();
         pieceIcon.src = (piece.owner === WHITE_OWNER ? whitePieceImgs : blackPieceImgs)[piece.type].src;
 
@@ -711,11 +716,28 @@ function pieceMenu(){
         const percentSpan = document.createElement("span");
         percentSpan.textContent = ` ${percent}%`;
         //create a DOM note to use appendChild
-        const label = document.createTextNode(`${pieceName} at (${piece.getX()},${piece.getY()})`);
+        const label = document.createTextNode(`${pieceName} at (${piece.getX()},${piece.getY()}) ${piece.getXP()} xp `);
+        const xpBarContainer = document.createElement("div");
+        xpBarContainer.style.width = "100%";
+        xpBarContainer.style.background = "#ddd";
+        xpBarContainer.style.borderRadius = "4px";
+        xpBarContainer.style.marginTop = "4px";
+
+        const xpBar = document.createElement("div");
+        xpBar.style.height = "10px";
+        xpBar.style.borderRadius = "4px";
+        xpBar.style.backgroundColor = "#4caf50"
+        
+        const xpPercent = Math.min(100, Math.floor((piece.getXP() / 5 * 100)));
+        xpBar.style.width = xpPercent + "%";
+
+        xpBarContainer.appendChild(xpBar);
 
         pieceButton.appendChild(pieceIcon);
         pieceButton.appendChild(label);
+        pieceButton.appendChild(xpBarContainer)
         pieceButton.appendChild(percentSpan);
+        pieceButton.appendChild(upButton)
 
         if(piece.owner === WHITE_OWNER){
             whitePiecesMenu.appendChild(pieceButton);
@@ -733,6 +755,13 @@ function pieceMenu(){
         }
     }
 }
-pieceMenu();
+function upgradeMenu(){
+    const upgradeOptions = [];
+    // Checks to see if upgrade condition is met
+    // checks piece type
+    // displays options based on piece type
 
+}
+
+pieceMenu();
 renderLoop();
