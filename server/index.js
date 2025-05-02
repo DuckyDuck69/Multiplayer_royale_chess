@@ -24,7 +24,7 @@ const app = express();
 // this will make sure that the file is sent to the user.
 app.get("/", (req, res) => {
     res.redirect("/login.html");
-  });
+});
 app.use(express.static("dist"));
 
 // This is a little complicated, but this allows us to send data to the server in
@@ -39,38 +39,38 @@ let owners = {};
 // strange semantics:
 // https://stackoverflow.com/questions/762011/what-is-the-difference-between-let-and-var
 
-let state = State.mmo();
+let state = State.default();
 let stateSum = State.sum(state);
 
 async function saveSessionsAndOwners() {
     await Promise.all([
-        writeFile("sessions.json", JSON.stringify(sessions)),
-        writeFile("owners.json", JSON.stringify(owners)),
+        writeFile("save/sessions.json", JSON.stringify(sessions)),
+        writeFile("save/owners.json", JSON.stringify(owners)),
     ]);
 }
 
 async function loadSessionsAndOwners() {
     await Promise.all([
-        readFile("sessions.json")
+        readFile("save/sessions.json")
             .then((f) => (sessions = JSON.parse(f)))
-            .catch((e) => writeFile("sessions.json", "{}")),
-        readFile("owners.json")
+            .catch((e) => writeFile("save/sessions.json", "{}")),
+        readFile("save/owners.json")
             .then((f) => (owners = JSON.parse(f)))
-            .catch((e) => writeFile("owners.json", "{}")),
+            .catch((e) => writeFile("save/owners.json", "{}")),
     ]);
 }
 
 async function loadGame() {
-    await readFile("game.json")
+    await readFile("save/game.json")
         .then((f) => {
             state = State.deserialize(JSON.parse(f));
             stateSum = State.sum(state);
         })
-        .catch((e) => writeFile("game.json", "{}"));
+        .catch((e) => writeFile("save/game.json", "{}"));
 }
 
 async function saveGame() {
-    await writeFile("game.json", JSON.stringify(state.serialize()));
+    await writeFile("save/game.json", JSON.stringify(state.serialize()));
 }
 
 async function load() {
@@ -96,16 +96,24 @@ function createNewOwner(username, color) {
     const newSession = uuidv4();
 
     const owner = { username, color };
+    console.log(owner);
     owners[newId] = owner;
     sessions[newSession] = newId;
 
-    io.emit("owners", owners);
+    state.createPiecesFor(newId);
+
+    io.emit("state", {
+        owners,
+        state: state.serialize(),
+        sum: stateSum,
+    });
+
 
     saveSessionsAndOwners();
-    return { session, owner };
+    return { session: newSession, owner: newId };
 }
 
-app.get("me", (req, res) => {
+app.get("/me", (req, res) => {
     const { session } = req.query;
     if (session && sessions[session]) {
         return res
@@ -116,7 +124,7 @@ app.get("me", (req, res) => {
     }
 });
 
-app.post("new", (req, res) => {
+app.post("/new", (req, res) => {
     const { username, color } = req.body;
 
     if (
@@ -126,8 +134,8 @@ app.post("new", (req, res) => {
         color &&
         COLORS.includes(color)
     ) {
-        const { session, owner } = createNewOwner();
-        return res.status(200).json({ success, session, owner });
+        const { session, owner } = createNewOwner(username, color);
+        return res.status(200).json({ success: true, session, owner });
     } else {
         return res.status(400).json({ success: false });
     }
@@ -139,8 +147,17 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 io.on("connection", (socket) => {
-    console.log(`${socket.id} connected!`);
-    const owner = 0;
+    const { session } = socket.handshake.query;
+
+    if (!session || !sessions[session]) {
+        socket.emit("error");
+        socket.disconnect();
+        return;
+    }
+
+    const owner = sessions[session];
+    const ownerData = owners[owner];
+    console.log(`${socket.id} connected! (owner=${owner}, username=${ownerData.username}, color=${ownerData.color})`);
 
     socket.emit("state", {
         owner,

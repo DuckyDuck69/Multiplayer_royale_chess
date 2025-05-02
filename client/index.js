@@ -8,67 +8,91 @@ import { ObstacleType } from "../common/obstacle";
 import Piece, { PieceTags, PieceType } from "../common/piece";
 import Move from "../common/move";
 
-console.log("Hello from the browser!");
-// console.log(`The increment is: ${INCREMENT}`);
-
-// Create a socket.io client instance (this will automatically connect to
-// the socket.io server).
-const socket = io();
-let state = State.mmo();
-let owner, stateSum;
+let state = new State(160, 160);
+let owners = {};
+let socket, stateSum;
+let owner = null;
 
 const start = Date.now();
 
-// This will be called when the socket gets connected.
-socket.on("connect", () => {
-    console.log(`${socket.id} connected!`);
-});
+async function init() {
+    if (!localStorage.getItem("session")) {
+        window.location.href = '/';
+    }
+    const session = localStorage.getItem("session");
+    const { exists } = await fetch(`/me?session=${session}`)
+        .then(async res => await res.json());
 
-socket.on("state", (data) => {
-    state = State.deserialize(data.state);
-
-    if (state.hasLost(WHITE_OWNER)) {
-        showWinScreen("Black");
-        return;
-    } else if (state.hasLost(BLACK_OWNER)) {
-        showWinScreen("White");
-        return;
+    if (!exists) {
+        window.location.href = '/';
     }
 
-    stateSum = data.sum;
-    owner = data.owner;
-    if (!grid.length) {
-        createGrid();
-    }
-});
+    let recvFirstState = false;
 
-socket.on("move", (data) => {
-    const { move, sum } = data;
-    const execMove = Move.deserialize(move);
-    state.makeMove(execMove);
+    // Create a socket.io client instance (this will automatically connect to
+    // the socket.io server).
+    socket = io(undefined, { query: { session } });
 
-    if (state.hasLost(WHITE_OWNER)) {
-        showWinScreen("Black");
-        return;
-    } else if (state.hasLost(BLACK_OWNER)) {
-        showWinScreen("White");
-        return;
-    }
+    // This will be called when the socket gets connected.
+    socket.on("connect", () => {
+        console.log(`${socket.id} connected!`);
+    });
 
-    if (
-        execMove.getPiece().getX() === selectedX &&
-        execMove.getPiece().getY() === selectedY
-    ) {
-        selected = false;
-    }
+    socket.on("state", (data) => {
+        state = State.deserialize(data.state);
 
-    stateSum = State.sum(state);
+        stateSum = data.sum;
+        if (data.owner) {
+            owner = data.owner;
+        }
+        owners = data.owners;
 
-    if (stateSum !== sum) {
-        console.warn("client-server desync, requesting full update...");
-        socket.emit("state_request");
-    }
-});
+        if (!recvFirstState) {
+
+            const king = state.findKing(owner);
+            if (!king) { // king died, need to make a new owner
+                localStorage.clear();
+                window.location.href = '/';
+                return;
+            }
+
+            camX = Math.min(Math.max(king.getX() - 8, 0), 160 - 8);
+            camY = Math.min(Math.max(king.getY() - 8, 0), 160 - 8);
+
+            recvFirstState = true;
+        }
+
+        if (!grid.length) {
+            createGrid();
+        }
+    });
+
+    socket.on("move", (data) => {
+        const { move, sum } = data;
+        const execMove = Move.deserialize(move);
+        state.makeMove(execMove);
+
+        if (
+            execMove.getPiece().getX() === selectedX &&
+            execMove.getPiece().getY() === selectedY
+        ) {
+            selected = false;
+        }
+
+        stateSum = State.sum(state);
+
+        if (stateSum !== sum) {
+            console.warn("client-server desync, requesting full update...");
+            socket.emit("state_request");
+        }
+    });
+
+    socket.on("owners", (data) => {
+        owners = data;
+    });
+}
+
+init();
 
 function makeMove(move) {
     socket.emit("move", { move: move.serialize(), sum: stateSum });
@@ -137,9 +161,6 @@ const resourceImages = ["resource_1", "resource_2", "resource_5"]
         return image;
     });
 
-console.log(whitePieceImgs);
-
-console.log(state);
 const devicePixelRatio = window.devicePixelRatio || 1; //get the ratio of any display
 const displayWidth = 880;
 const displayHeight = 880;
@@ -209,6 +230,8 @@ export default class Tile {
     }
 }
 
+createGrid();
+
 function zoomIn() {
     if (visibleCols > 2) {
         visibleCols -= 2;
@@ -225,15 +248,18 @@ function zoomOut() {
         visibleCols += 2;
         visibleRow += 2;
         size = displayHeight / visibleCols
-        needsRedraw = true; 
+        needsRedraw = true;
     }
 }
-createGrid()
 
 let needsRedraw = true;
 
 //draw the board at a consistent fps
 function renderLoop() {
+    if (!owner) {
+        requestAnimationFrame(renderLoop);
+        return;
+    }
     colorBoard(); //the board has to be drawn first
     drawObstacles(); //draw the obstacle again each time the board is drawn
     drawResources();
@@ -279,50 +305,50 @@ let zoomInInterval = null;
 let zoomOutInterval = null;
 let zoomSpeed = 100;
 
-document.getElementById("zoomIn").addEventListener("mousedown", function(){
+document.getElementById("zoomIn").addEventListener("mousedown", function () {
     zoomIn();
     zoomInInterval = setInterval(zoomIn, zoomSpeed);
 });
-document.getElementById("zoomIn").addEventListener("mouseup", function(){
-    if (zoomInInterval){
+document.getElementById("zoomIn").addEventListener("mouseup", function () {
+    if (zoomInInterval) {
         clearInterval(zoomInInterval)
         zoomInInterval = null;
     }
-    });
-document.getElementById("zoomIn").addEventListener("mouseleave", function(){
-    if (zoomInInterval){
+});
+document.getElementById("zoomIn").addEventListener("mouseleave", function () {
+    if (zoomInInterval) {
         clearInterval(zoomInInterval)
         zoomInInterval = null;
     }
-    });
-document.getElementById("zoomIn").addEventListener("mouseup", function(){
-    if (zoomInInterval){
+});
+document.getElementById("zoomIn").addEventListener("mouseup", function () {
+    if (zoomInInterval) {
         clearInterval(zoomInInterval)
         zoomInInterval = null;
     }
-    });
-document.getElementById("zoomOut").addEventListener("mousedown", function(){
+});
+document.getElementById("zoomOut").addEventListener("mousedown", function () {
     zoomOut();
     zoomOutInterval = setInterval(zoomOut, zoomSpeed);
 });
-document.getElementById("zoomOut").addEventListener("mouseup", function(){
-    if (zoomOutInterval){
+document.getElementById("zoomOut").addEventListener("mouseup", function () {
+    if (zoomOutInterval) {
         clearInterval(zoomOutInterval)
         zoomOutInterval = null;
     }
-    });
-document.getElementById("zoomOut").addEventListener("mouseleave", function(){
-    if (zoomOutInterval){
+});
+document.getElementById("zoomOut").addEventListener("mouseleave", function () {
+    if (zoomOutInterval) {
         clearInterval(zoomOutInterval)
         zoomOutInterval = null;
     }
-    });
-document.getElementById("zoomOut").addEventListener("mouseup", function(){
-    if (zoomOutInterval){
+});
+document.getElementById("zoomOut").addEventListener("mouseup", function () {
+    if (zoomOutInterval) {
         clearInterval(zoomOutInterval)
         zoomOutInterval = null;
     }
-    });
+});
 
 myCanvas.addEventListener("mousedown", function (event) {
     /*
@@ -387,14 +413,14 @@ myCanvas.addEventListener("mouseup", function (event) {
     needsRedraw = true;
     console.log("mouseup");
 });
-window.addEventListener("mouseup", function(event) {
+window.addEventListener("mouseup", function (event) {
     if (isDragging) {
         isDragging = false;
         needsRedraw = true;
         console.log("global mouseup - stopped dragging");
     }
 });
-myCanvas.addEventListener("mouseleave", function(event) {
+myCanvas.addEventListener("mouseleave", function (event) {
     if (isDragging) {
         isDragging = false;
         needsRedraw = true;
@@ -417,14 +443,14 @@ myCanvas.addEventListener("click", () => {
         selected = false;
     } else {
         const piece = state.pieceAt(mouseTileX, mouseTileY);
-        if (piece && state.pieceMoves(piece).length > 0) {
+        if (piece && piece.owner === owner && state.pieceMoves(piece).length > 0) {
             selected = true;
             selectedX = mouseTileX;
             selectedY = mouseTileY;
         }
     }
 
-    
+
     if (selected) {
         showMoves();
     }
@@ -455,6 +481,9 @@ function colorBoard() {
             let num = x + y * BOARD_WIDTH; //retrive the tile number
 
             //color differently for even and odd BOARD_HEIGHT differently
+            if (!grid[num]) {
+                continue;
+            }
             if (y % 2 === 0) {
                 if (num % 2 === 0) {
                     grid[num].show("#F5DCE0");
@@ -528,23 +557,14 @@ function drawPieces() {
         ) {
             const pieceX = (piece.x - camX) * size;
             const pieceY = (piece.y - camY) * size;
-            if (piece.owner === BLACK_OWNER) {
-                ctx.drawImage(
-                    blackPieceImgs[piece.type],
-                    pieceX,
-                    pieceY,
-                    size,
-                    size
-                );
-            } else {
-                ctx.drawImage(
-                    whitePieceImgs[piece.type],
-                    pieceX,
-                    pieceY,
-                    size,
-                    size
-                );
-            }
+            // TODO: Color pieces based on owner[piece.owner].color
+            ctx.drawImage(
+                whitePieceImgs[piece.type],
+                pieceX,
+                pieceY,
+                size,
+                size
+            );
             if (piece.isStunned()) {
                 ctx.drawImage(stunImg, pieceX, pieceY, size, size);
             }
@@ -559,6 +579,18 @@ function drawPieces() {
             }
             if (piece.isChimera() && piece.hasTag(PieceTags.ChimeraMoveable)) {
                 ctx.drawImage(chimeraMoveableImg, pieceX, pieceY, size, size);
+            }
+
+            if (piece.getType() == PieceType.King) {
+                const name = owners[piece.owner].username;
+                ctx.font = '32px sans-serif';
+                ctx.textAlign = 'center';
+
+                ctx.fillStyle = '#000000';
+                ctx.fillText(name, pieceX + 2 + size * 0.5, pieceY + 2);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(name, pieceX + size * 0.5, pieceY);
             }
         }
     }
@@ -575,7 +607,6 @@ function showMoves() {
 }
 
 function cooldownHighLight() {
-    console.log("Cooldown function")
     for (const piece of state.pieces) {
         if (piece.isOnCooldown()) {
 
@@ -668,12 +699,12 @@ function restartGame() {
 
     document.getElementById("win-screen").style.display = "none";
     document.querySelector(".win-screen").style.display = "none";
-    
+
     document.getElementById("chessContainer").style.border = ""; // Reset to CSS default
     document.getElementById("chessBoard").style.border = ""; // Reset to CSS default
-    
+
     selected = false;
-    
+
     // Request new game state from server
     socket.emit("restart_game");
     // needs to redraw the board
@@ -695,8 +726,8 @@ document
 //Piece Tracking Menu
 //const menu = document.getElementById("whitePiecesMenu")
 
-function pieceMenu(){
-    const pieceButtons = [];    
+function pieceMenu() {
+    const pieceButtons = [];
     whitePiecesMenu.innerHTML = "";
     blackPiecesMenu.innerHTML = "";
     for (const piece of state.pieces) {
@@ -708,7 +739,7 @@ function pieceMenu(){
         upButton.style.background = '#8922c1'
 
         pieceName = pieceNames[piece.type];
-        
+
         const pieceIcon = new Image();
         pieceIcon.src = (piece.owner === WHITE_OWNER ? whitePieceImgs : blackPieceImgs)[piece.type].src;
 
@@ -727,7 +758,7 @@ function pieceMenu(){
         xpBar.style.height = "10px";
         xpBar.style.borderRadius = "4px";
         xpBar.style.backgroundColor = "#4caf50"
-        
+
         const xpPercent = Math.min(100, Math.floor((piece.getXP() / 5 * 100)));
         xpBar.style.width = xpPercent + "%";
 
@@ -739,23 +770,23 @@ function pieceMenu(){
         pieceButton.appendChild(percentSpan);
         pieceButton.appendChild(upButton)
 
-        if(piece.owner === WHITE_OWNER){
+        if (piece.owner === WHITE_OWNER) {
             whitePiecesMenu.appendChild(pieceButton);
-        }else{
+        } else {
             blackPiecesMenu.appendChild(pieceButton)
         }
 
         //color the button accordingly base on the percent 
-        if(percent >= 75){
-            pieceButton.style.backgroundColor= 'red'
-        }else if(percent > 25 && percent < 75){
+        if (percent >= 75) {
+            pieceButton.style.backgroundColor = 'red'
+        } else if (percent > 25 && percent < 75) {
             pieceButton.style.backgroundColor = 'yellow'
-        }else{
-            pieceButton.style.backgroundColor= 'green'
+        } else {
+            pieceButton.style.backgroundColor = 'green'
         }
     }
 }
-function upgradeMenu(){
+function upgradeMenu() {
     const upgradeOptions = [];
     // Checks to see if upgrade condition is met
     // checks piece type

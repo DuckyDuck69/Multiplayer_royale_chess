@@ -119,13 +119,6 @@ export default class State {
     static default() {
         const state = new State();
 
-        for (let i = 0; i < 16; i += 1) {
-            state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 0, BLACK_OWNER));
-            state.pieces.push(new Piece(PieceType.Pawn, i, 1, BLACK_OWNER));
-            state.pieces.push(new Piece(PieceType.Pawn, i, 14, WHITE_OWNER));
-            state.pieces.push(new Piece(DEFAULT_LAYOUT[i], i, 15, WHITE_OWNER));
-        }
-
         state.board = Board.generate(state);
 
         // state.board.addObstacle(Obstacle.wall(7, 10));
@@ -134,49 +127,38 @@ export default class State {
         return state;
     }
 
-    //Generates state for MMO layout, x & y represent King's position
-    static mmo() {
-        const state = new State();
-
-        for (let o=0; o<2; o+=1) {
-
-            let ranX=Math.floor(Math.random()*(14))+1;
-            if(state.pieces.length>0) {
-                while(ranX===state.pieces[0].getX()) {
-                    ranX=Math.floor(Math.random()*(14))+1;
-                }
-            }
-            //console.log("RanX: "+ranX);
-
-
-            let ranY=Math.floor(Math.random()*(14))+1;
-            if(state.pieces.length>0) {
-                while(ranY===state.pieces[0].getY()) {
-                    ranY=Math.floor(Math.random()*(14))+1;
-                }
-            }
-            //console.log("RanY: "+ranY);
-            
-
-            //left column
-            for (let r=0; r<3; r+=1) {
-                state.pieces.push(new Piece(PieceType.Pawn, ranX-1, ranY-1+r, o));
-            }
-            //center column
-            state.pieces.push(new Piece(PieceType.Pawn, ranX, ranY-1, o));
-            state.pieces.push(new Piece(PieceType.King, ranX, ranY, o));
-            state.pieces.push(new Piece(PieceType.Pawn, ranX, ranY+1, o));
-            //right column
-            for (let r=0; r<3; r+=1) {
-                state.pieces.push(new Piece(PieceType.Pawn, ranX+1, ranY-1+r, o));
+    createPiecesFor(o) {
+        let ranX = Math.floor(Math.random() * (14)) + 1;
+        if (this.pieces.length > 0) {
+            while (ranX === this.pieces[0].getX()) {
+                ranX = Math.floor(Math.random() * (14)) + 1;
             }
         }
+        //console.log("RanX: "+ranX);
 
-        state.board=Board.generate(state);
-        state.recalculateAttackMap();
-        return state;
+
+        let ranY = Math.floor(Math.random() * (14)) + 1;
+        if (this.pieces.length > 0) {
+            while (ranY === this.pieces[0].getY()) {
+                ranY = Math.floor(Math.random() * (14)) + 1;
+            }
+        }
+        //console.log("RanY: "+ranY);
+
+
+        //left column
+        for (let r = 0; r < 3; r += 1) {
+            this.pieces.push(new Piece(PieceType.Pawn, ranX - 1, ranY - 1 + r, o));
+        }
+        //center column
+        this.pieces.push(new Piece(PieceType.Pawn, ranX, ranY - 1, o));
+        this.pieces.push(new Piece(PieceType.King, ranX, ranY, o));
+        this.pieces.push(new Piece(PieceType.Pawn, ranX, ranY + 1, o));
+        //right column
+        for (let r = 0; r < 3; r += 1) {
+            this.pieces.push(new Piece(PieceType.Pawn, ranX + 1, ranY - 1 + r, o));
+        }
     }
-
 
     allOwners() {
         return [...new Set(this.pieces.map((piece) => piece.getOwner()))];
