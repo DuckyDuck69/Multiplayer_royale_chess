@@ -7,6 +7,7 @@ import State, { BLACK_OWNER, WHITE_OWNER } from "../common/chess";
 import { ObstacleType } from "../common/obstacle";
 import Piece, { PieceTags, PieceType } from "../common/piece";
 import Move from "../common/move";
+import { XP_LEVEL } from "../common/piece";
 
 let state = new State(160, 160);
 let owners = {};
@@ -65,6 +66,7 @@ async function init() {
         if (!grid.length) {
             createGrid();
         }
+        markPieceMenuForUpdate();
     });
 
     socket.on("move", (data) => {
@@ -85,6 +87,7 @@ async function init() {
             console.warn("client-server desync, requesting full update...");
             socket.emit("state_request");
         }
+        markPieceMenuForUpdate();
     });
 
     socket.on("owners", (data) => {
@@ -96,6 +99,7 @@ init();
 
 function makeMove(move) {
     socket.emit("move", { move: move.serialize(), sum: stateSum });
+    markPieceMenuForUpdate();
 }
 
 const myCanvas = document.getElementById("chessBoard");
@@ -253,6 +257,11 @@ function zoomOut() {
 }
 
 let needsRedraw = true;
+let pieceMenuNeedsUpdate = true;
+
+function markPieceMenuForUpdate() {
+    pieceMenuNeedsUpdate = true;
+}
 
 //draw the board at a consistent fps
 function renderLoop() {
@@ -260,14 +269,19 @@ function renderLoop() {
         requestAnimationFrame(renderLoop);
         return;
     }
+    
     colorBoard(); //the board has to be drawn first
     drawObstacles(); //draw the obstacle again each time the board is drawn
     drawResources();
     cooldownHighLight();
     drawPieces();
-    pieceMenu();
+    
     if (selected) {
         showMoves();
+    }
+    if (pieceMenuNeedsUpdate) {
+        pieceMenu();
+        pieceMenuNeedsUpdate = false;
     }
     requestAnimationFrame(renderLoop);
 }
@@ -438,6 +452,8 @@ myCanvas.addEventListener("click", () => {
         if (requestedMove) {
             // state.makeMove(requestedMove);
             makeMove(requestedMove);
+
+            markPieceMenuForUpdate();
         }
 
         selected = false;
@@ -447,6 +463,8 @@ myCanvas.addEventListener("click", () => {
             selected = true;
             selectedX = mouseTileX;
             selectedY = mouseTileY;
+
+            markPieceMenuForUpdate();
         }
     }
 
@@ -454,7 +472,6 @@ myCanvas.addEventListener("click", () => {
     if (selected) {
         showMoves();
     }
-    update();
     cooldownHighLight();
 });
 
@@ -709,6 +726,8 @@ function restartGame() {
     socket.emit("restart_game");
     // needs to redraw the board
     needsRedraw = true;
+
+    markPieceMenuForUpdate();
 }
 
 document
@@ -724,30 +743,53 @@ document
     });
 
 //Piece Tracking Menu
-//const menu = document.getElementById("whitePiecesMenu")
+
+// Store currently active upgrade modal to prevent duplicates
+let activeUpgradeModal = null;
+
 
 function pieceMenu() {
-    const pieceButtons = [];
-    whitePiecesMenu.innerHTML = "";
-    blackPiecesMenu.innerHTML = "";
+    // Clear both menus
+    blackPiecesMenu.innerHTML = '';
+
+    // Process each piece
     for (const piece of state.pieces) {
         const pieceButton = document.createElement("button");
         const upButton = document.createElement("button");
-        upButton.innerHTML = "UPGRADE"
-        upButton.style.height = '100%'
-        upButton.style.width = '100%'
-        upButton.style.background = '#8922c1'
+        upButton.innerHTML = "UPGRADE";
+        upButton.style.height = '100%';
+        upButton.style.width = '100%';
+        upButton.style.background = '#8922c1';
+        
+        // Add upgrade button click handler
+        upButton.addEventListener("click", (event) => {
+            console.log("Upgrade button clicked for", pieceNames[piece.type], "at", piece.getX(), piece.getY());
+            
+            try {
+                // Verify that the piece has the necessary properties and methods
+                console.log("Piece properties: ", {
+                    type: piece.type,
+                    xp: piece.getXP(),
+                    promote: typeof piece.promoteTo === 'function'
+                });
+                
+                upgradeMenu(piece);
+            } catch (error) {
+                console.error("Error handling upgrade button click:", error);
+            }
+        });
 
         pieceName = pieceNames[piece.type];
 
         const pieceIcon = new Image();
         pieceIcon.src = (piece.owner === WHITE_OWNER ? whitePieceImgs : blackPieceImgs)[piece.type].src;
 
-        let percent = Math.floor(piece.cooldownPercent() * 100)
+        let percent = Math.floor(piece.cooldownPercent() * 100);
         const percentSpan = document.createElement("span");
         percentSpan.textContent = ` ${percent}%`;
-        //create a DOM note to use appendChild
+        
         const label = document.createTextNode(`${pieceName} at (${piece.getX()},${piece.getY()}) ${piece.getXP()} xp `);
+        
         const xpBarContainer = document.createElement("div");
         xpBarContainer.style.width = "100%";
         xpBarContainer.style.background = "#ddd";
@@ -757,7 +799,7 @@ function pieceMenu() {
         const xpBar = document.createElement("div");
         xpBar.style.height = "10px";
         xpBar.style.borderRadius = "4px";
-        xpBar.style.backgroundColor = "#4caf50"
+        xpBar.style.backgroundColor = "#4caf50";
 
         const xpPercent = Math.min(100, Math.floor((piece.getXP() / 5 * 100)));
         xpBar.style.width = xpPercent + "%";
@@ -766,33 +808,201 @@ function pieceMenu() {
 
         pieceButton.appendChild(pieceIcon);
         pieceButton.appendChild(label);
-        pieceButton.appendChild(xpBarContainer)
+        pieceButton.appendChild(xpBarContainer);
         pieceButton.appendChild(percentSpan);
-        pieceButton.appendChild(upButton)
+        pieceButton.appendChild(upButton);
 
         if (piece.owner === WHITE_OWNER) {
             whitePiecesMenu.appendChild(pieceButton);
         } else {
-            blackPiecesMenu.appendChild(pieceButton)
+            blackPiecesMenu.appendChild(pieceButton);
         }
 
-        //color the button accordingly base on the percent 
+        // Color the button based on cooldown percentage
         if (percent >= 75) {
-            pieceButton.style.backgroundColor = 'red'
+            pieceButton.style.backgroundColor = 'red';
         } else if (percent > 25 && percent < 75) {
-            pieceButton.style.backgroundColor = 'yellow'
+            pieceButton.style.backgroundColor = 'yellow';
         } else {
-            pieceButton.style.backgroundColor = 'green'
+            pieceButton.style.backgroundColor = 'green';
         }
     }
 }
-function upgradeMenu() {
-    const upgradeOptions = [];
-    // Checks to see if upgrade condition is met
-    // checks piece type
-    // displays options based on piece type
 
+function upgradeMenu(piece) {
+    // If there's already an active modal, remove it first
+    if (activeUpgradeModal && document.body.contains(activeUpgradeModal)) {
+        document.body.removeChild(activeUpgradeModal);
+    }
+    
+    console.log("Opening upgrade menu for:", piece);
+    console.log("Piece type:", piece.type, "XP:", piece.getXP());
+    console.log("XP_LEVEL defined:", typeof XP_LEVEL !== 'undefined');
+    
+    // Create modal container
+    const modalContainer = document.createElement("div");
+    modalContainer.id = "upgrade-modal";
+    modalContainer.style.position = "fixed";
+    modalContainer.style.top = "0";
+    modalContainer.style.left = "0";
+    modalContainer.style.width = "100%";
+    modalContainer.style.height = "100%";
+    modalContainer.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+    modalContainer.style.display = "flex";
+    modalContainer.style.justifyContent = "center";
+    modalContainer.style.alignItems = "center";
+    modalContainer.style.zIndex = "1000";
+
+    // Create modal content
+    const modalContent = document.createElement("div");
+    modalContent.style.backgroundColor = "#fff";
+    modalContent.style.padding = "20px";
+    modalContent.style.borderRadius = "5px";
+    modalContent.style.width = "400px";
+    modalContent.style.maxWidth = "90%";
+
+    // Title
+    const title = document.createElement("h2");
+    title.textContent = "Upgrade " + pieceNames[piece.type];
+    modalContent.appendChild(title);
+
+    // Close button
+    const closeButton = document.createElement("button");
+    closeButton.textContent = "Cancel";
+    closeButton.style.marginTop = "20px";
+    closeButton.style.float = "right";
+    closeButton.addEventListener("click", () => {
+        if (document.body.contains(modalContainer)) {
+            document.body.removeChild(modalContainer);
+            activeUpgradeModal = null;
+        }
+    });
+
+    const upgradeOptions = [];
+    
+    try {
+        // Get current piece XP and type
+        const pieceXP = piece.getXP();
+        const pieceType = piece.getType();
+        
+        console.log("Processing upgrades for", pieceNames[pieceType], "with XP:", pieceXP);
+        
+        // Level 0 Promotions: Pawn Promotion
+        if (pieceXP >= XP_LEVEL[0] && pieceType === PieceType.Pawn) {
+            console.log("Adding pawn promotion options");
+            upgradeOptions.push(
+                { type: PieceType.Knight, name: "Knight" },
+                { type: PieceType.Bishop, name: "Bishop" },
+                { type: PieceType.Rook, name: "Rook" }
+            );
+        }
+        // Level 1 Promotions: King
+        else if (pieceXP >= XP_LEVEL[1] && pieceType === PieceType.King) {
+            console.log("Adding king promotion options");
+            upgradeOptions.push(
+                { type: PieceType.Pawn, name: "Spawn Pawn" }
+            );
+        }
+        // Level 2 Promotions: Mythical pieces
+        else if (pieceXP >= XP_LEVEL[2]) {
+            console.log("Processing level 2 promotions");
+            switch (pieceType) {
+                case PieceType.Knight:
+                    upgradeOptions.push(
+                        { type: PieceType.Pegasus, name: "Pegasus" },
+                        { type: PieceType.ChimeraGoat, name: "Chimera (creates lion)" }
+                    );
+                    break;
+                case PieceType.Bishop:
+                    upgradeOptions.push(
+                        { type: PieceType.Gorgon, name: "Gorgon" }
+                    );
+                    break;
+                case PieceType.Rook:
+                    upgradeOptions.push(
+                        { type: PieceType.Juggernaut, name: "Juggernaut" },
+                        { type: PieceType.Builder, name: "Builder" }
+                    );
+                    break;
+            }
+        }
+    } catch (error) {
+        console.error("Error determining upgrade options:", error);
+    }
+
+    // Create option buttons
+    if (upgradeOptions.length > 0) {
+        const optionsContainer = document.createElement("div");
+        optionsContainer.style.display = "grid";
+        optionsContainer.style.gridTemplateColumns = "repeat(auto-fit, minmax(120px, 1fr))";
+        optionsContainer.style.gap = "10px";
+        optionsContainer.style.marginTop = "15px";
+
+        upgradeOptions.forEach(option => {
+            const optionButton = document.createElement("button");
+            
+            // Create image if available
+            const pieceIcon = new Image();
+            pieceIcon.src = (piece.owner === WHITE_OWNER ? whitePieceImgs : blackPieceImgs)[option.type].src;
+            pieceIcon.style.width = "40px";
+            pieceIcon.style.height = "40px";
+            pieceIcon.style.display = "block";
+            pieceIcon.style.margin = "0 auto 5px";
+            
+            const nameSpan = document.createElement("div");
+            nameSpan.textContent = option.name;
+            
+            optionButton.appendChild(pieceIcon);
+            optionButton.appendChild(nameSpan);
+            
+            optionButton.style.padding = "10px";
+            optionButton.style.display = "flex";
+            optionButton.style.flexDirection = "column";
+            optionButton.style.alignItems = "center";
+            optionButton.style.cursor = "pointer";
+            
+            // Click handler to perform the promotion
+            optionButton.addEventListener("click", () => {
+                console.log("Promoting", pieceNames[piece.type], "to", option.name);
+    
+                const newPiece = piece.promoteTo(option.type);
+                
+                if (document.body.contains(modalContainer)) {
+                    document.body.removeChild(modalContainer);
+                    activeUpgradeModal = null;
+                }
+                
+                // If a new piece was created (for the king)
+                if (newPiece) {
+                    state.pieces.push(newPiece);
+                }
+                
+                pieceMenu();
+                
+                // Log promotion
+                console.log(`Upgraded ${pieceNames[piece.type]} at (${piece.getX()},${piece.getY()})`);
+                if (newPiece) {
+                    console.log(`Created new ${pieceNames[newPiece.type]} at (${newPiece.getX()},${newPiece.getY()})`);
+                }
+            });
+            
+            optionsContainer.appendChild(optionButton);
+        });
+        
+        modalContent.appendChild(optionsContainer);
+    } else {
+        // No upgrades available
+        const noUpgradeMsg = document.createElement("p");
+        noUpgradeMsg.textContent = "This piece doesn't have enough XP or cannot be upgraded.";
+        modalContent.appendChild(noUpgradeMsg);
+    }
+
+    modalContent.appendChild(closeButton);
+    modalContainer.appendChild(modalContent);
+    document.body.appendChild(modalContainer);
+
+    activeUpgradeModal = modalContainer;
 }
 
-pieceMenu();
+
 renderLoop();

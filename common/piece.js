@@ -20,14 +20,14 @@ export const PieceTags = {
 
 //Array of XP thresholds
 export const XP_LEVEL = [
-    10, //Level 0 : Pawn to Knight/Bishop/Rook 
-    20, //Level 1 : Pawn to Queen , King to King+Pawn
-    30, //Level 2 : Mythical pieces
+    1, //Level 0 : Pawn to Knight/Bishop/Rook 
+    2, //Level 1 : King to King+Pawn
+    3, //Level 2 : Mythical pieces
 ];
 
 export const PromoTree = {
     [PieceType.Pawn]: [PieceType.Knight, PieceType.Bishop, PieceType.Rook, PieceType.Queen],
-    [PieceType.Knight]: [PieceType.ChimeraGoat, PieceType.ChimeraLion, PieceType.Pegasus],
+    [PieceType.Knight]: [PieceType.ChimeraGoat, PieceType.Pegasus],
     [PieceType.Bishop]: [PieceType.Gorgon],
     [PieceType.Rook]: [PieceType.Juggernaut, PieceType.Builder],
     [PieceType.King]: [PieceType.King, PieceType.Pawn],
@@ -152,61 +152,59 @@ export default class Piece {
     }
 
     promoteTo(type) {
-        switch (this.getXP()) {
-            case XP_LEVEL[0]: // Level 0 Promotions : Pawn Promotion
-                if (this.getType() === PieceType.Pawn) {
-                    // Pawn to Knight/Bishop/Rook
-                    if (type in PromoTree[PieceType.Pawn].slice(0, 3)) {
-                        this.type = type;
-                        this.xp = 0;
-                    }
-                }
-            break;
-            case XP_LEVEL[1]: // Level 1 Promotions : King & Queen
-                // Pawn to Queen
-                if (type === PromoTree[PieceType.Pawn][4]) {
-                    this.type = type;
-                    this.xp = 0;
-                }
-                //mpreg King!!
-                else if (this.getType()===PieceType.King) {
-                    if (type === PieceType.Pawn) {
-                        this.xp = 0;
-                        return new Piece(PieceType.Pawn, this.x, this.y+1, this.owner);
-                    }
-                }
-            break;
-            case XP_LEVEL[2]: // Level 2 Promotions : Mythical pieces
-                switch (this.getType()) {
-                    // Knight to ChimeraGoat/ChimeraLion/Pegasus
-                    case PieceType.Knight: 
-                        if (type in PromoTree[PieceType.Knight]){
-                            if (type === PieceType.Pegasus) {
-                                this.type = type;
-                                this.xp = 0;
-                            }
-                            else if (type === PieceType.ChimeraGoat) {
-                                this.type = type;
-                                this.xp = 0;
-                                return new Piece(PieceType.ChimeraLion, this.x-1, this.y, this.owner);
-                            }
-                        }
-                    break;
-                    // Bishop to Gorgon
-                    case PieceType.Bishop:
-                        this.type = PieceType.Gorgon;
-                        this.xp = 0;
-                    break;
-                    // Rook to Juggernaut/Builder
-                    case PieceType.Rook:
-                        if (type in PromoTree[PieceType.Rook]) {
+        // Level 0 Promotions : Pawn Promotion
+        if (this.getXP() >= XP_LEVEL[0] && this.getType() === PieceType.Pawn) {
+            // Pawn to Knight/Bishop/Rook
+            if (PromoTree[PieceType.Pawn].includes(type)) {
+                this.type = type;
+                this.xp = 0;
+                return null;
+            }
+        }
+        else if (this.getXP() >= XP_LEVEL[1] && this.getType() === PieceType.King && type === PieceType.Pawn) {
+            // Level 1 Promotions : King
+            //mpreg King!!
+            this.xp = 0;
+            console.log("king pawns out");
+            return new Piece(PieceType.Pawn, this.x, this.y + 1, this.owner);
+        }
+        else if (this.getXP() >= XP_LEVEL[2]) {
+            // Level 2 Promotions : Mythical pieces
+            switch (this.getType()) {
+                // Knight to ChimeraGoat/ChimeraLion/Pegasus
+                case PieceType.Knight:
+                    if (PromoTree[PieceType.Knight].includes(type)) {
+                        if (type === PieceType.Pegasus) {
                             this.type = type;
                             this.xp = 0;
+                            return null;
                         }
+                        else if (type === PieceType.ChimeraGoat) {
+                            this.type = type;
+                            this.xp = 0;
+                            return new Piece(PieceType.ChimeraLion, this.x - 1, this.y, this.owner);
+                        }
+                    }
                     break;
-                }
-            break;  
-        } 
+                // Bishop to Gorgon
+                case PieceType.Bishop:
+                    if (type === PieceType.Gorgon) {
+                        this.type = PieceType.Gorgon;
+                        this.xp = 0;
+                        return null;
+                    }
+                    break;
+                // Rook to Juggernaut/Builder
+                case PieceType.Rook:
+                    if (PromoTree[PieceType.Rook].includes(type)) {
+                        this.type = type;
+                        this.xp = 0;
+                        return null;
+                    }
+                    break;
+            }
+        }
+        return null;
     }
 
     moveTo(x, y) {
@@ -216,11 +214,6 @@ export default class Piece {
         this.y = y;
 
         this.moveCount += 1;
-
-        if (this.getType() === PieceType.Pawn && this.moveCount >= 8) {
-            // TODO: Implement underpromotion
-            this.type = PieceType.Queen;
-        }
 
         const [dx, dy] = [this.x - prevX, this.y - prevY];
 
