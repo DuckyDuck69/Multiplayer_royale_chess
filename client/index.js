@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 
 // This imports the INCREMENT value from the /common/chess.js file. Files in the
 // /common directory should be accessible from both the client and server.
-import State, { BLACK_OWNER, WHITE_OWNER } from "../common/chess";
+import State, { BLACK_OWNER, COLOR_VALUES, COLORS, WHITE_OWNER } from "../common/chess";
 import { ObstacleType } from "../common/obstacle";
 import Piece, { PieceTags, PieceType } from "../common/piece";
 import Move from "../common/move";
@@ -149,6 +149,60 @@ const blackPieceImgs = pieceNames
         return image;
     });
 
+function createPieceImageAtlas() {
+    const PIECE_SIZE = 64;
+    const offscreenCanvas = document.createElement("canvas");
+
+    offscreenCanvas.width = pieceNames.length * PIECE_SIZE;
+    offscreenCanvas.height = COLORS.length * PIECE_SIZE;
+    const octx = offscreenCanvas.getContext('2d');
+
+    for (let y = 0; y < COLORS.length; y += 1) {
+        for (let x = 0; x < pieceNames.length; x += 1) {
+            const src = (y === 0 ? blackPieceImgs[x] : whitePieceImgs[x]);
+
+            octx.drawImage(src, x * PIECE_SIZE, y * PIECE_SIZE, PIECE_SIZE, PIECE_SIZE);
+        }
+    }
+
+    const imageData = octx.getImageData(0, 0, pieceNames.length * PIECE_SIZE, COLORS.length * PIECE_SIZE);
+
+    for (let y = 0; y < COLORS.length; y += 1) {
+        const color = COLOR_VALUES[y] || COLOR_VALUES[0];
+        for (let x = 0; x < pieceNames.length; x += 1) {
+
+            for (let yy = y * PIECE_SIZE; yy < (y + 1) * PIECE_SIZE; yy += 1) {
+                for (let xx = 0; xx < imageData.width; xx += 1) {
+                    const i = yy + xx;
+                    const index = (yy * imageData.width + xx) * 4;
+
+                    const value = imageData.data[index] + imageData.data[index + 1] + imageData.data[index + 2];
+                    if (value < 384) {
+                        imageData.data[index] = 0;
+                        imageData.data[index + 1] = 0;
+                        imageData.data[index + 2] = 0;
+                    } else {
+                        imageData.data[index] = color[0] === 0 ? 0 : (i % color[0] === 0 ? 255 : 0);
+                        imageData.data[index + 1] = color[1] === 0 ? 0 : (i % color[1] === 0 ? 255 : 0);
+                        imageData.data[index + 2] = color[2] === 0 ? 0 : (i % color[2] === 0 ? 255 : 0);
+                    }
+
+                }
+            }
+        }
+    }
+
+    octx.putImageData(imageData, 0, 0);
+
+    return offscreenCanvas;
+}
+
+let pieceAtlas = new Image();
+// some bs incoming
+
+Promise.all(whitePieceImgs.concat(blackPieceImgs).map(img => new Promise((res) => img.onload = res)))
+    .then(() => pieceAtlas = createPieceImageAtlas());
+
 const obstacleImages = ["mountain", "mud"]
     .map((name) => `assets/textures/${name}.png`)
     .map((path) => {
@@ -269,13 +323,13 @@ function renderLoop() {
         requestAnimationFrame(renderLoop);
         return;
     }
-    
+
     colorBoard(); //the board has to be drawn first
     drawObstacles(); //draw the obstacle again each time the board is drawn
     drawResources();
     cooldownHighLight();
     drawPieces();
-    
+
     if (selected) {
         showMoves();
     }
@@ -574,9 +628,14 @@ function drawPieces() {
         ) {
             const pieceX = (piece.x - camX) * size;
             const pieceY = (piece.y - camY) * size;
-            // TODO: Color pieces based on owner[piece.owner].color
             ctx.drawImage(
-                whitePieceImgs[piece.type],
+                pieceAtlas,
+
+                piece.type * 64,
+                COLORS.indexOf(owners[piece.owner].color) * 64,
+                64,
+                64,
+
                 pieceX,
                 pieceY,
                 size,
@@ -760,11 +819,11 @@ function pieceMenu() {
         upButton.style.height = '100%';
         upButton.style.width = '100%';
         upButton.style.background = '#8922c1';
-        
+
         // Add upgrade button click handler
         upButton.addEventListener("click", (event) => {
             console.log("Upgrade button clicked for", pieceNames[piece.type], "at", piece.getX(), piece.getY());
-            
+
             try {
                 // Verify that the piece has the necessary properties and methods
                 console.log("Piece properties: ", {
@@ -772,7 +831,7 @@ function pieceMenu() {
                     xp: piece.getXP(),
                     promote: typeof piece.promoteTo === 'function'
                 });
-                
+
                 upgradeMenu(piece);
             } catch (error) {
                 console.error("Error handling upgrade button click:", error);
@@ -787,9 +846,9 @@ function pieceMenu() {
         let percent = Math.floor(piece.cooldownPercent() * 100);
         const percentSpan = document.createElement("span");
         percentSpan.textContent = ` ${percent}%`;
-        
+
         const label = document.createTextNode(`${pieceName} at (${piece.getX()},${piece.getY()}) ${piece.getXP()} xp `);
-        
+
         const xpBarContainer = document.createElement("div");
         xpBarContainer.style.width = "100%";
         xpBarContainer.style.background = "#ddd";
@@ -834,11 +893,11 @@ function upgradeMenu(piece) {
     if (activeUpgradeModal && document.body.contains(activeUpgradeModal)) {
         document.body.removeChild(activeUpgradeModal);
     }
-    
+
     console.log("Opening upgrade menu for:", piece);
     console.log("Piece type:", piece.type, "XP:", piece.getXP());
     console.log("XP_LEVEL defined:", typeof XP_LEVEL !== 'undefined');
-    
+
     // Create modal container
     const modalContainer = document.createElement("div");
     modalContainer.id = "upgrade-modal";
@@ -879,14 +938,14 @@ function upgradeMenu(piece) {
     });
 
     const upgradeOptions = [];
-    
+
     try {
         // Get current piece XP and type
         const pieceXP = piece.getXP();
         const pieceType = piece.getType();
-        
+
         console.log("Processing upgrades for", pieceNames[pieceType], "with XP:", pieceXP);
-        
+
         // Level 0 Promotions: Pawn Promotion
         if (pieceXP >= XP_LEVEL[0] && pieceType === PieceType.Pawn) {
             console.log("Adding pawn promotion options");
@@ -940,7 +999,7 @@ function upgradeMenu(piece) {
 
         upgradeOptions.forEach(option => {
             const optionButton = document.createElement("button");
-            
+
             // Create image if available
             const pieceIcon = new Image();
             pieceIcon.src = (piece.owner === WHITE_OWNER ? whitePieceImgs : blackPieceImgs)[option.type].src;
@@ -948,47 +1007,47 @@ function upgradeMenu(piece) {
             pieceIcon.style.height = "40px";
             pieceIcon.style.display = "block";
             pieceIcon.style.margin = "0 auto 5px";
-            
+
             const nameSpan = document.createElement("div");
             nameSpan.textContent = option.name;
-            
+
             optionButton.appendChild(pieceIcon);
             optionButton.appendChild(nameSpan);
-            
+
             optionButton.style.padding = "10px";
             optionButton.style.display = "flex";
             optionButton.style.flexDirection = "column";
             optionButton.style.alignItems = "center";
             optionButton.style.cursor = "pointer";
-            
+
             // Click handler to perform the promotion
             optionButton.addEventListener("click", () => {
                 console.log("Promoting", pieceNames[piece.type], "to", option.name);
-    
+
                 const newPiece = piece.promoteTo(option.type);
-                
+
                 if (document.body.contains(modalContainer)) {
                     document.body.removeChild(modalContainer);
                     activeUpgradeModal = null;
                 }
-                
+
                 // If a new piece was created (for the king)
                 if (newPiece) {
                     state.pieces.push(newPiece);
                 }
-                
+
                 pieceMenu();
-                
+
                 // Log promotion
                 console.log(`Upgraded ${pieceNames[piece.type]} at (${piece.getX()},${piece.getY()})`);
                 if (newPiece) {
                     console.log(`Created new ${pieceNames[newPiece.type]} at (${newPiece.getX()},${newPiece.getY()})`);
                 }
             });
-            
+
             optionsContainer.appendChild(optionButton);
         });
-        
+
         modalContent.appendChild(optionsContainer);
     } else {
         // No upgrades available
