@@ -807,7 +807,6 @@ document
 // Store currently active upgrade modal to prevent duplicates
 let activeUpgradeModal = null;
 
-
 function pieceMenu() {
     const menu = document.getElementById("blackPiecesMenu");
     menu.innerHTML = "";
@@ -816,6 +815,7 @@ function pieceMenu() {
         const pieceButton = document.createElement("button");
         pieceButton.piece = piece;
 
+        // Teleport to the piece's location
         pieceButton.addEventListener("click", () => {
             const centerRange = Math.floor(visibleCols / 2);
             camX = Math.max(0, Math.min(piece.getX() - centerRange, BOARD_WIDTH - visibleCols));
@@ -823,22 +823,27 @@ function pieceMenu() {
             needsRedraw = true;
         });
 
+        // Piece icon image
         const pieceIcon = new Image();
         pieceIcon.src = (piece.owner === WHITE_OWNER ? whitePieceImgs : blackPieceImgs)[piece.type].src;
 
+        // Label of the piece
         const pieceName = pieceNames[piece.type];
         const label = document.createTextNode(`${pieceName} at (${piece.getX()},${piece.getY()}) ${piece.getXP()} xp `);
 
+        // Cooldown percent 
         const percent = Math.floor(piece.cooldownPercent() * 100);
         const percentSpan = document.createElement("span");
         percentSpan.textContent = ` ${percent}% `;
 
+        // XP bar container
         const xpBarContainer = document.createElement("div");
         xpBarContainer.style.width = "100%";
         xpBarContainer.style.background = "#ddd";
         xpBarContainer.style.borderRadius = "4px";
         xpBarContainer.style.marginTop = "4px";
 
+        // XP bar fill
         const xpBar = document.createElement("div");
         xpBar.style.height = "10px";
         xpBar.style.borderRadius = "4px";
@@ -846,18 +851,36 @@ function pieceMenu() {
         xpBar.style.width = Math.min(100, Math.floor((piece.getXP() / 5) * 100)) + "%";
         xpBarContainer.appendChild(xpBar);
 
+        // Upgrade button
         const upButton = document.createElement("button");
         upButton.innerHTML = "UPGRADE";
         upButton.style.height = '100%';
         upButton.style.width = '100%';
         upButton.style.background = '#8922c1';
 
+        upButton.addEventListener("click", (event) => {
+            console.log("Upgrade button clicked for", pieceNames[piece.type], "at", piece.getX(), piece.getY());
+            try {
+                console.log("Piece properties: ", {
+                    type: piece.type,
+                    xp: piece.getXP(),
+                    promote: typeof piece.promoteTo === 'function'
+                });
+
+                upgradeMenu(piece);
+            } catch (error) {
+                console.error("Error handling upgrade button click:", error);
+            }
+        });
+
+        // Append all elements to the button
         pieceButton.appendChild(pieceIcon);
         pieceButton.appendChild(label);
         pieceButton.appendChild(xpBarContainer);
         pieceButton.appendChild(percentSpan);
         pieceButton.appendChild(upButton);
 
+        // Append the piece button to the menu
         menu.appendChild(pieceButton);
     }
 }
@@ -881,6 +904,8 @@ function updateMenuState(){
         }
     }
 }
+
+
 
 function upgradeMenu(piece) {
     // If there's already an active modal, remove it first
