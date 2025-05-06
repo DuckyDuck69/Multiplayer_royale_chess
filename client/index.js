@@ -829,7 +829,6 @@ function pieceMenu() {
             }   
             needsRedraw = true;
         })
-
         const upButton = document.createElement("button");
         upButton.innerHTML = "UPGRADE";
         upButton.style.height = '100%';
