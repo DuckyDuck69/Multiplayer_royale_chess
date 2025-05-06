@@ -82,7 +82,7 @@ export default class Board {
         let numMud = 13;
         let drawMud = "Mud";
         let drawWall = "Wall";
-        const direction_mud = [
+        const directionMud = [
             [0, -1],
             [0, 1], //up and down diretion respectively
             [1, 0],
@@ -92,7 +92,7 @@ export default class Board {
             [-1, -1],
             [-1, 1], //diagonal up left and down left respectively
         ];
-        const directions_wall = [
+        const directionsWall = [
             [0, -1], //up
             [1, 0], //right
             [0, 1], //down
@@ -103,7 +103,7 @@ export default class Board {
                 //generateWall;
                 this.generateObstacles(
                     state,
-                    direction_mud,
+                    directionsWall,
                     x,
                     y,
                     numMud,
@@ -113,7 +113,7 @@ export default class Board {
                 //generateMud
                 this.generateObstacles(
                     state,
-                    directions_wall,
+                    directionMud,
                     x,
                     y,
                     numWall,

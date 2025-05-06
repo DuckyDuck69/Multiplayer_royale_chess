@@ -46,7 +46,7 @@ socket.on("move", (data) => {
     const { move, sum } = data;
     const execMove = Move.deserialize(move);
     state.makeMove(execMove);
-
+    needMenuUpdate = true;
     if (state.hasLost(WHITE_OWNER)) {
         showWinScreen("Black");
         return;
@@ -176,6 +176,9 @@ let moveStartX = 0,
     moveStartY = 0;
 let dragTileX, dragTileY;
 
+//updat the menu
+let needMenuUpdate = false
+
 //create a Cell object, which can be assigned method for later use
 export default class Tile {
     constructor(x, y) {
@@ -239,9 +242,13 @@ function renderLoop() {
     drawResources();
     cooldownHighLight();
     drawPieces();
-    pieceMenu();
+    upgradeMenu()
     if (selected) {
         showMoves();
+    }
+    if(needMenuUpdate){
+        pieceMenu();
+        needMenuUpdate = false;
     }
     requestAnimationFrame(renderLoop);
 }
@@ -694,13 +701,29 @@ document
 
 //Piece Tracking Menu
 //const menu = document.getElementById("whitePiecesMenu")
-
+whitePiecesMenu.innerHTML = "";
+blackPiecesMenu.innerHTML = "";
 function pieceMenu(){
-    const pieceButtons = [];    
     whitePiecesMenu.innerHTML = "";
     blackPiecesMenu.innerHTML = "";
     for (const piece of state.pieces) {
         const pieceButton = document.createElement("button");
+        pieceButton.piece = piece
+
+        pieceButton.addEventListener("click", ()=>{
+            const centerRange = Math.floor(visibleCols/2)
+            if(piece.getX() > centerRange){
+                camX = piece.getX() - centerRange
+            }else{
+                camX = 0
+            }
+            if(piece.getY() > centerRange){
+                camY = piece.getY() - centerRange
+            }else{
+                camX = 0
+            }
+            pieceButton.style.backgroundColor= "orange"
+        })
         const upButton = document.createElement("button");
         upButton.innerHTML = "UPGRADE"
         upButton.style.height = '100%'
@@ -713,10 +736,10 @@ function pieceMenu(){
         pieceIcon.src = (piece.owner === WHITE_OWNER ? whitePieceImgs : blackPieceImgs)[piece.type].src;
 
         let percent = Math.floor(piece.cooldownPercent() * 100)
-        const percentSpan = document.createElement("span");
+        let percentSpan = document.createElement("span");
         percentSpan.textContent = ` ${percent}%`;
         //create a DOM note to use appendChild
-        const label = document.createTextNode(`${pieceName} at (${piece.getX()},${piece.getY()}) ${piece.getXP()} xp `);
+        let label = document.createTextNode(`${pieceName} at (${piece.getX()},${piece.getY()}) ${piece.getXP()} xp `);
         const xpBarContainer = document.createElement("div");
         xpBarContainer.style.width = "100%";
         xpBarContainer.style.background = "#ddd";
@@ -724,6 +747,7 @@ function pieceMenu(){
         xpBarContainer.style.marginTop = "4px";
 
         const xpBar = document.createElement("div");
+        xpBar.classList.add("xp-bar");
         xpBar.style.height = "10px";
         xpBar.style.borderRadius = "4px";
         xpBar.style.backgroundColor = "#4caf50"
@@ -744,24 +768,43 @@ function pieceMenu(){
         }else{
             blackPiecesMenu.appendChild(pieceButton)
         }
+    }
+}
 
-        //color the button accordingly base on the percent 
-        if(percent >= 75){
-            pieceButton.style.backgroundColor= 'red'
-        }else if(percent > 25 && percent < 75){
-            pieceButton.style.backgroundColor = 'yellow'
-        }else{
-            pieceButton.style.backgroundColor= 'green'
+function upgradeMenu(){
+    const whiteButt = document.getElementById("whitePiecesMenu")
+    const blackButt = document.getElementById("blackPiecesMenu")
+    const sides = [whiteButt, blackButt]
+    for(const side of sides){
+        for(const button of side.children){
+            const piece = button.piece;
+    
+            let percentSpan = button.querySelector("span");
+            let percent = Math.floor(piece.cooldownPercent() * 100)
+            percentSpan.textContent = ` ${percent}% `;
+    
+            //color the button accordingly base on the percent 
+            if(percent >= 75){
+                button.style.backgroundColor= 'red'
+            }else if(percent > 25 && percent < 75){
+                button.style.backgroundColor = 'yellow'
+            }else{
+                button.style.backgroundColor= 'green'
+            }
         }
     }
 }
-function upgradeMenu(){
-    const upgradeOptions = [];
-    // Checks to see if upgrade condition is met
-    // checks piece type
-    // displays options based on piece type
 
-}
+const directionNPC = [
+    [0, -1],
+    [0, 1], //up and down diretion respectively
+    [1, 0],
+    [-1, 0], //right and left direction respectively
+    [1, -1],
+    [1, 1], //diagonal up right and down right respectively
+    [-1, -1],
+    [-1, 1], //diagonal up left and down left respectively
+];
 
 pieceMenu();
 renderLoop();
