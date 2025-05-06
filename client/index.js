@@ -814,6 +814,21 @@ function pieceMenu() {
     // Process each piece
     for (const piece of state.pieces) {
         const pieceButton = document.createElement("button");
+
+        pieceButton.addEventListener("click", ()=>{
+            const centerRange = Math.floor(visibleCols/2)
+            if(piece.getX() > centerRange){
+                camX = piece.getX() - centerRange
+            }else{
+                camX = 0
+            }
+            if(piece.getY() > centerRange){
+                camY = piece.getY() - centerRange
+            }else{
+                camY = 0
+            }   
+            needsRedraw = true;
+        })
         const upButton = document.createElement("button");
         upButton.innerHTML = "UPGRADE";
         upButton.style.height = '100%';
