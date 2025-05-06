@@ -329,6 +329,7 @@ function renderLoop() {
     drawResources();
     cooldownHighLight();
     drawPieces();
+    updateMenuState();
 
     if (selected) {
         showMoves();
@@ -808,61 +809,29 @@ let activeUpgradeModal = null;
 
 
 function pieceMenu() {
-    // Clear both menus
-    blackPiecesMenu.innerHTML = '';
+    const menu = document.getElementById("blackPiecesMenu");
+    menu.innerHTML = "";
 
-    // Process each piece
     for (const piece of state.pieces) {
         const pieceButton = document.createElement("button");
+        pieceButton.piece = piece;
 
-        pieceButton.addEventListener("click", ()=>{
-            const centerRange = Math.floor(visibleCols/2)
-            if(piece.getX() > centerRange){
-                camX = piece.getX() - centerRange
-            }else{
-                camX = 0
-            }
-            if(piece.getY() > centerRange){
-                camY = piece.getY() - centerRange
-            }else{
-                camY = 0
-            }   
+        pieceButton.addEventListener("click", () => {
+            const centerRange = Math.floor(visibleCols / 2);
+            camX = Math.max(0, Math.min(piece.getX() - centerRange, BOARD_WIDTH - visibleCols));
+            camY = Math.max(0, Math.min(piece.getY() - centerRange, BOARD_HEIGHT - visibleRow));
             needsRedraw = true;
-        })
-        const upButton = document.createElement("button");
-        upButton.innerHTML = "UPGRADE";
-        upButton.style.height = '100%';
-        upButton.style.width = '100%';
-        upButton.style.background = '#8922c1';
-
-        // Add upgrade button click handler
-        upButton.addEventListener("click", (event) => {
-            console.log("Upgrade button clicked for", pieceNames[piece.type], "at", piece.getX(), piece.getY());
-
-            try {
-                // Verify that the piece has the necessary properties and methods
-                console.log("Piece properties: ", {
-                    type: piece.type,
-                    xp: piece.getXP(),
-                    promote: typeof piece.promoteTo === 'function'
-                });
-
-                upgradeMenu(piece);
-            } catch (error) {
-                console.error("Error handling upgrade button click:", error);
-            }
         });
-
-        pieceName = pieceNames[piece.type];
 
         const pieceIcon = new Image();
         pieceIcon.src = (piece.owner === WHITE_OWNER ? whitePieceImgs : blackPieceImgs)[piece.type].src;
 
-        let percent = Math.floor(piece.cooldownPercent() * 100);
-        const percentSpan = document.createElement("span");
-        percentSpan.textContent = ` ${percent}%`;
-
+        const pieceName = pieceNames[piece.type];
         const label = document.createTextNode(`${pieceName} at (${piece.getX()},${piece.getY()}) ${piece.getXP()} xp `);
+
+        const percent = Math.floor(piece.cooldownPercent() * 100);
+        const percentSpan = document.createElement("span");
+        percentSpan.textContent = ` ${percent}% `;
 
         const xpBarContainer = document.createElement("div");
         xpBarContainer.style.width = "100%";
@@ -874,11 +843,14 @@ function pieceMenu() {
         xpBar.style.height = "10px";
         xpBar.style.borderRadius = "4px";
         xpBar.style.backgroundColor = "#4caf50";
-
-        const xpPercent = Math.min(100, Math.floor((piece.getXP() / 5 * 100)));
-        xpBar.style.width = xpPercent + "%";
-
+        xpBar.style.width = Math.min(100, Math.floor((piece.getXP() / 5) * 100)) + "%";
         xpBarContainer.appendChild(xpBar);
+
+        const upButton = document.createElement("button");
+        upButton.innerHTML = "UPGRADE";
+        upButton.style.height = '100%';
+        upButton.style.width = '100%';
+        upButton.style.background = '#8922c1';
 
         pieceButton.appendChild(pieceIcon);
         pieceButton.appendChild(label);
@@ -886,19 +858,26 @@ function pieceMenu() {
         pieceButton.appendChild(percentSpan);
         pieceButton.appendChild(upButton);
 
-        if (piece.owner === WHITE_OWNER) {
-            whitePiecesMenu.appendChild(pieceButton);
-        } else {
-            blackPiecesMenu.appendChild(pieceButton);
-        }
+        menu.appendChild(pieceButton);
+    }
+}
 
-        // Color the button based on cooldown percentage
+
+function updateMenuState(){
+    const menu = document.getElementById("blackPiecesMenu");
+    for (const button of menu.children) {
+        const piece = button.piece;
+
+        const percentSpan = button.querySelector("span");
+        const percent = Math.floor(piece.cooldownPercent() * 100);
+        percentSpan.textContent = ` ${percent}% `;
+
         if (percent >= 75) {
-            pieceButton.style.backgroundColor = 'red';
-        } else if (percent > 25 && percent < 75) {
-            pieceButton.style.backgroundColor = 'yellow';
+            button.style.backgroundColor = 'red';
+        } else if (percent > 25) {
+            button.style.backgroundColor = 'yellow';
         } else {
-            pieceButton.style.backgroundColor = 'green';
+            button.style.backgroundColor = 'green';
         }
     }
 }
