@@ -1042,8 +1042,12 @@ function upgradeMenu(piece) {
             // Click handler to perform the promotion
             optionButton.addEventListener("click", () => {
                 console.log("Promoting", pieceNames[piece.type], "to", option.name);
-
-                const newPiece = piece.promoteTo(option.type);
+                //update on the server side
+                socket.emit("promote", {
+                    x: piece.getX(),
+                    y: piece.getY(),
+                    type: option.type,
+                });
 
                 if (document.body.contains(modalContainer)) {
                     document.body.removeChild(modalContainer);

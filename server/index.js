@@ -185,6 +185,28 @@ io.on("connection", (socket) => {
 
         io.emit("move", { move: move.serialize(), sum: stateSum });
     });
+    socket.on("promote", ({ x, y, type })=>{
+        //get the piece information
+        const piece = state.pieceAt(x, y)
+        if(piece && piece.getOwner() === owner){
+            const newPiece = piece.promoteTo(type)
+            if(newPiece){
+                //update the piece on the backend side
+                state.pieces.push(newPiece)
+            }
+            
+            stateSum = State.sum(state);
+
+            io.emit("state", {
+                owner,
+                owners,
+                state: state.serialize(),
+                sum: stateSum,
+              });
+
+            console.log(`Promoted (${x}, ${y}) to type ${type}`);
+        }
+    })
 
     socket.on("state_request", () => {
         socket.emit("state", {
