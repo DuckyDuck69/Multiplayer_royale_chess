@@ -8,11 +8,18 @@ import { ObstacleType } from "../common/obstacle";
 import Piece, { PieceTags, PieceType } from "../common/piece";
 import Move from "../common/move";
 import { XP_LEVEL } from "../common/piece";
+import NPC from "../common/npc";
 
 let state = new State(160, 160);
 let owners = {};
 let socket, stateSum;
 let owner = null;
+
+const npcList = new NPC();
+
+const npcPiece = new Piece(PieceType.Bishop, 10, 10, 999)
+state.pieces.push(npcPiece)
+npcList.addNPC(npcPiece);
 
 const start = Date.now();
 
@@ -73,6 +80,9 @@ async function init() {
         const { move, sum } = data;
         const execMove = Move.deserialize(move);
         state.makeMove(execMove);
+
+        //move the NPC
+        npcList.updateNPC();
 
         if (
             execMove.getPiece().getX() === selectedX &&
@@ -338,6 +348,7 @@ function renderLoop() {
         pieceMenu();
         pieceMenuNeedsUpdate = false;
     }
+
     requestAnimationFrame(renderLoop);
 }
 
