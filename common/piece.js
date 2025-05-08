@@ -167,14 +167,12 @@ export default class Piece {
             // Pawn to Knight/Bishop/Rook
             if (PromoTree[PieceType.Pawn].includes(type)) {
                 this.type = type;
-                this.xp = 0;
                 return null;
             }
         }
         else if (this.getXP() >= XP_LEVEL[1] && this.getType() === PieceType.King && type === PieceType.Pawn) {
             // Level 1 Promotions : King
             //mpreg King!!
-            this.xp = 0;
             console.log("king pawns out");
             return new Piece(PieceType.Pawn, this.x, this.y + 1, this.owner);
         }
@@ -186,12 +184,10 @@ export default class Piece {
                     if (PromoTree[PieceType.Knight].includes(type)) {
                         if (type === PieceType.Pegasus) {
                             this.type = type;
-                            this.xp = 0;
                             return null;
                         }
                         else if (type === PieceType.ChimeraGoat) {
                             this.type = type;
-                            this.xp = 0;
                             return new Piece(PieceType.ChimeraLion, this.x - 1, this.y, this.owner);
                         }
                     }
@@ -200,7 +196,6 @@ export default class Piece {
                 case PieceType.Bishop:
                     if (type === PieceType.Gorgon) {
                         this.type = PieceType.Gorgon;
-                        this.xp = 0;
                         return null;
                     }
                     break;
@@ -208,7 +203,6 @@ export default class Piece {
                 case PieceType.Rook:
                     if (PromoTree[PieceType.Rook].includes(type)) {
                         this.type = type;
-                        this.xp = 0;
                         return null;
                     }
                     break;
