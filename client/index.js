@@ -15,12 +15,12 @@ let owners = {};
 let socket, stateSum;
 let owner = null;
 
-const npcList = new NPC();
-console.log(npcList)
+//const npcList = new NPC();
+//console.log(npcList)
 
-const npcPiece = new Piece(PieceType.Bishop, 10, 10, 999)
-state.pieces.push(npcPiece)
-npcList.addNPC(npcPiece);
+//const npcPiece = new Piece(PieceType.Bishop, 10, 10, 999)
+//state.pieces.push(npcPiece)
+//npcList.addNPC(npcPiece);
 
 const start = Date.now();
 
@@ -83,7 +83,7 @@ async function init() {
         state.makeMove(execMove);
 
         //move the NPC
-        npcList.updateNPC();
+        //npcList.updateNPC();
 
         if (
             execMove.getPiece().getX() === selectedX &&
