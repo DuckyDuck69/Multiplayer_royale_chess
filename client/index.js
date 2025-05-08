@@ -8,20 +8,20 @@ import { ObstacleType } from "../common/obstacle";
 import Piece, { PieceTags, PieceType } from "../common/piece";
 import Move from "../common/move";
 import { XP_LEVEL } from "../common/piece";
-import NPC from "../common/npc";
+//import NPC from "../common/npc";
 
 let state = new State(160, 160);
 let owners = {};
 let socket, stateSum;
 let owner = null;
-
+/*
 const npcList = new NPC();
 console.log(npcList)
 
 const npcPiece = new Piece(PieceType.Bishop, 10, 10, 999)
 state.pieces.push(npcPiece)
 npcList.addNPC(npcPiece);
-
+*/
 const start = Date.now();
 
 async function init() {
@@ -83,7 +83,7 @@ async function init() {
         state.makeMove(execMove);
 
         //move the NPC
-        npcList.updateNPC();
+       // npcList.updateNPC();
 
         if (
             execMove.getPiece().getX() === selectedX &&
@@ -860,7 +860,7 @@ function pieceMenu() {
         xpBar.style.height = "10px";
         xpBar.style.borderRadius = "4px";
         xpBar.style.backgroundColor = "#4caf50";
-        xpBar.style.width = Math.min(100, Math.floor((piece.getXP() / 5) * 100)) + "%";
+        xpBar.style.width = Math.min(100, Math.floor((piece.getXP() / piece.getXPLevel()) * 100)) + "%";
         xpBarContainer.appendChild(xpBar);
 
         // Upgrade button

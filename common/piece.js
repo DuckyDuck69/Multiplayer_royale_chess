@@ -150,7 +150,17 @@ export default class Piece {
     getLastDy() {
         return this.lastDy;
     }
-
+    getXPLevel(){
+        if (this.getType() === PieceType.Pawn) {
+            return XP_LEVEL[0]
+        }
+        else if (this.getType() === PieceType.King){
+            return XP_LEVEL[1]
+        }
+        else if (this.getType() === PieceType.Knight || this.getType() === PieceType.Pegasus || this.getType() === PieceType.ChimeraGoat || this.getType() === PieceType.Bishop || this.getType() === PieceType.Gorgon || this.getType() === PieceType.Rook){
+            return XP_LEVEL[2]
+        }
+    }
     promoteTo(type) {
         // Level 0 Promotions : Pawn Promotion
         if (this.getXP() >= XP_LEVEL[0] && this.getType() === PieceType.Pawn) {
