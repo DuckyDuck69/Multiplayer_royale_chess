@@ -150,14 +150,14 @@ export default class Piece {
     getLastDy() {
         return this.lastDy;
     }
-    getXPLevel(){
+    getXPLevel() {
         if (this.getType() === PieceType.Pawn) {
             return XP_LEVEL[0]
         }
-        else if (this.getType() === PieceType.King){
+        else if (this.getType() === PieceType.King) {
             return XP_LEVEL[1]
         }
-        else if (this.getType() === PieceType.Knight || this.getType() === PieceType.Pegasus || this.getType() === PieceType.ChimeraGoat || this.getType() === PieceType.Bishop || this.getType() === PieceType.Gorgon || this.getType() === PieceType.Rook){
+        else if (this.getType() === PieceType.Knight || this.getType() === PieceType.Pegasus || this.getType() === PieceType.ChimeraGoat || this.getType() === PieceType.Bishop || this.getType() === PieceType.Gorgon || this.getType() === PieceType.Rook) {
             return XP_LEVEL[2]
         }
     }
@@ -244,7 +244,6 @@ export default class Piece {
         this.lastDx = dx;
         this.lastDy = dy;
 
-        this.addCooldown(Piece.value(this.getType()));
     }
 
     addCooldown(seconds) {

@@ -1,6 +1,8 @@
 export const ObstacleType = {
     Wall: 0,
     Mud: 1, // Allows piece movement to, but cannot move past until another move after.
+    Water: 2, // Doubles cooldown when moving inside
+    TallGrass: 3, // Can only see own pieces
 };
 
 export default class Obstacle {
@@ -21,6 +23,14 @@ export default class Obstacle {
 
     static mud(x, y, w = 1, h = 1) {
         return new Obstacle(ObstacleType.Mud, x, y, { w, h });
+    }
+
+    static water(x, y, w = 1, h = 1) {
+        return new Obstacle(ObstacleType.Water, x, y, { w, h });
+    }
+
+    static tallGrass(x, y, w = 1, h = 1) {
+        return new Obstacle(ObstacleType.TallGrass, x, y, { w, h });
     }
 
     getType() {

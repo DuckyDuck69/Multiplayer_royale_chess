@@ -1,5 +1,6 @@
 // This imports the socket.io client code
 import { io } from "socket.io-client";
+import { Noise } from "noisejs";
 
 // This imports the INCREMENT value from the /common/chess.js file. Files in the
 // /common directory should be accessible from both the client and server.
@@ -14,6 +15,8 @@ let state = new State(160, 160);
 let owners = {};
 let socket, stateSum;
 let owner = null;
+
+const noise = new Noise(0xc4e55);
 
 //const npcList = new NPC();
 //console.log(npcList)
@@ -214,8 +217,8 @@ let pieceAtlas = new Image();
 Promise.all(whitePieceImgs.concat(blackPieceImgs).map(img => new Promise((res) => img.onload = res)))
     .then(() => pieceAtlas = createPieceImageAtlas());
 
-const obstacleImages = ["mountain", "mud"]
-    .map((name) => `assets/textures/${name}.png`)
+const obstacleImages = ["mountain", "mud", "water", "grass"]
+    .map((name) => `assets/textures/obstacle_${name}.png`)
     .map((path) => {
         const image = new Image();
         image.src = path;
@@ -568,19 +571,11 @@ function colorBoard() {
             if (!grid[num]) {
                 continue;
             }
-            if (y % 2 === 0) {
-                if (num % 2 === 0) {
-                    grid[num].show("#F5DCE0");
-                } else {
-                    grid[num].show("#E18AAA");
-                }
-            } else {
-                if (num % 2 != 0) {
-                    grid[num].show("#F5DCE0");
-                } else {
-                    grid[num].show("#E18AAA");
-                }
-            }
+            const light = (x + y) % 2 === 0;
+            const hue = noise.simplex2(x * 0.01, y * 0.01) * 360;
+
+            const color = `hsl(${hue}deg ${light ? "80%" : "10%"} ${light ? "95%" : "50%"})`;
+            grid[num].show(color);
         }
     }
 }
@@ -639,6 +634,9 @@ function drawPieces() {
             piece.y >= camY &&
             piece.y < camY + visibleRow
         ) {
+            if (piece.owner !== owner && state.board.obstaclesAt(piece.x, piece.y).some(o => o.getType() === ObstacleType.TallGrass)) {
+                continue;
+            }
             const pieceX = (piece.x - camX) * size;
             const pieceY = (piece.y - camY) * size;
             ctx.drawImage(
@@ -898,7 +896,7 @@ function pieceMenu() {
 }
 
 
-function updateMenuState(){
+function updateMenuState() {
     const menu = document.getElementById("blackPiecesMenu");
     for (const button of menu.children) {
         const piece = button.piece;

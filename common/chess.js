@@ -700,8 +700,6 @@ export default class State {
                     move.getY()
                 );
 
-                console.log(points);
-
                 // capture all pieces with bresenhams.
                 this.pieces = this.pieces.filter(
                     (p) =>
@@ -714,7 +712,12 @@ export default class State {
             }
         }
 
+
+        const isNowInWater = this.board.obstaclesAt(move.getX(), move.getY())
+            .some((o) => o.getType() === ObstacleType.Water);
+
         piece.moveTo(move.getX(), move.getY());
+        piece.addCooldown(Piece.value(piece.getType()) * (isNowInWater ? 2 : 1));
 
         if (move.castle) {
             // assumes that the move is valid, and can castle
@@ -744,6 +747,7 @@ export default class State {
         ) {
             this.board.removeObstaclesAt(move.getX(), move.getY());
         }
+
 
         this.update();
         return isCapture;
