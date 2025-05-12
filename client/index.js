@@ -9,18 +9,12 @@ import { ObstacleType } from "../common/obstacle";
 import Piece, { PieceTags, PieceType } from "../common/piece";
 import Move from "../common/move";
 import { XP_LEVEL } from "../common/piece";
-//import NPC from "../common/npc";
+import NPC from "../common/npc";
 
 let state = new State(160, 160);
 let owners = {};
 let socket, stateSum;
 let owner = null;
-
-//give the npcs an owner
-const NPC_OWNER = 2;
-// Give that owner a color so drawPieces() will render it
-owners[NPC_OWNER] = { color: "white", username: "NPC" };
-let npcSpawned = false;
 
 //create NPC list and add 1 npc for testing
 const npcList = []
