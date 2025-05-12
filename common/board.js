@@ -1,3 +1,5 @@
+import noise from "noisejs";
+const Noise = noise.Noise;
 import Obstacle from "./obstacle.js";
 import Resource from "./resource.js";
 // Holds state about the board such as obstacles (portals? walls?)
@@ -74,6 +76,8 @@ export default class Board {
         }
     }
     randomObstacle(state) {
+        this.generateRivers(160, 160);
+        this.generateGrassPatches(160, 160);
         // let wallColor = 'orange';
         // let mudColor = 'brown';
         let minRow = 5;
@@ -125,6 +129,33 @@ export default class Board {
         }
     }
 
+    generateRivers(width, height) {
+        const noise = new Noise();
+
+        for (let x = 0; x < width; x += 1) {
+            for (let y = 0; y < height; y += 1) {
+                const val = noise.simplex2(x * 0.02, y * 0.02);
+                const isWater = (val > 0.02 && val < 0.2);
+                if (isWater) {
+                    this.addObstacle(Obstacle.water(x, y));
+                }
+            }
+        }
+    }
+
+    generateGrassPatches(width, height) {
+        const noise = new Noise();
+
+        for (let x = 0; x < width; x += 1) {
+            for (let y = 0; y < height; y += 1) {
+                const val = noise.simplex2(x * 0.05, y * 0.07);
+                const isGrass = (val > 0.7);
+                if (isGrass && this.obstaclesAt(x, y).length === 0) {
+                    this.addObstacle(Obstacle.tallGrass(x, y));
+                }
+            }
+        }
+    }
 
     generateObstacles(state, directionChoice, chunkX, chunkY, number, minRow, maxRow, type) {
         const columns = 16;

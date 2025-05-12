@@ -1,5 +1,6 @@
 // This imports the socket.io client code
 import { io } from "socket.io-client";
+import { Noise } from "noisejs";
 
 // This imports the INCREMENT value from the /common/chess.js file. Files in the
 // /common directory should be accessible from both the client and server.
@@ -8,7 +9,7 @@ import { ObstacleType } from "../common/obstacle";
 import Piece, { PieceTags, PieceType } from "../common/piece";
 import Move from "../common/move";
 import { XP_LEVEL } from "../common/piece";
-import NPC from "../common/npc";
+//import NPC from "../common/npc";
 
 let state = new State(160, 160);
 let owners = {};
@@ -234,8 +235,8 @@ let pieceAtlas = new Image();
 Promise.all(whitePieceImgs.concat(blackPieceImgs).map(img => new Promise((res) => img.onload = res)))
     .then(() => pieceAtlas = createPieceImageAtlas());
 
-const obstacleImages = ["mountain", "mud"]
-    .map((name) => `assets/textures/${name}.png`)
+const obstacleImages = ["mountain", "mud", "water", "grass"]
+    .map((name) => `assets/textures/obstacle_${name}.png`)
     .map((path) => {
         const image = new Image();
         image.src = path;
@@ -588,19 +589,11 @@ function colorBoard() {
             if (!grid[num]) {
                 continue;
             }
-            if (y % 2 === 0) {
-                if (num % 2 === 0) {
-                    grid[num].show("#F5DCE0");
-                } else {
-                    grid[num].show("#E18AAA");
-                }
-            } else {
-                if (num % 2 != 0) {
-                    grid[num].show("#F5DCE0");
-                } else {
-                    grid[num].show("#E18AAA");
-                }
-            }
+            const light = (x + y) % 2 === 0;
+            const hue = noise.simplex2(x * 0.01, y * 0.01) * 360;
+
+            const color = `hsl(${hue}deg ${light ? "80%" : "10%"} ${light ? "95%" : "50%"})`;
+            grid[num].show(color);
         }
     }
 }
@@ -663,6 +656,9 @@ function drawPieces() {
             piece.y >= camY &&
             piece.y < camY + visibleRow
         ) {
+            if (piece.owner !== owner && state.board.obstaclesAt(piece.x, piece.y).some(o => o.getType() === ObstacleType.TallGrass)) {
+                continue;
+            }
             const pieceX = (piece.x - camX) * size;
             const pieceY = (piece.y - camY) * size;
             ctx.drawImage(
@@ -884,7 +880,7 @@ function pieceMenu() {
         xpBar.style.height = "10px";
         xpBar.style.borderRadius = "4px";
         xpBar.style.backgroundColor = "#4caf50";
-        xpBar.style.width = Math.min(100, Math.floor((piece.getXP() / 5) * 100)) + "%";
+        xpBar.style.width = Math.min(100, Math.floor((piece.getXP() / piece.getXPLevel()) * 100)) + "%";
         xpBarContainer.appendChild(xpBar);
 
         // Upgrade button
@@ -922,7 +918,7 @@ function pieceMenu() {
 }
 
 
-function updateMenuState(){
+function updateMenuState() {
     const menu = document.getElementById("blackPiecesMenu");
     for (const button of menu.children) {
         const piece = button.piece;
