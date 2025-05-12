@@ -15,12 +15,17 @@ let owners = {};
 let socket, stateSum;
 let owner = null;
 
-const npcList = new NPC();
-console.log(npcList)
+//give the npcs an owner
+const NPC_OWNER = 2;
+// Give that owner a color so drawPieces() will render it
+owners[NPC_OWNER] = { color: "white", username: "NPC" };
+let npcSpawned = false;
 
-const npcPiece = new Piece(PieceType.Bishop, 10, 10, 999)
-state.pieces.push(npcPiece)
-npcList.addNPC(npcPiece);
+//create NPC list and add 1 npc for testing
+const npcList = []
+
+const npcPiece1 = new NPC(PieceType.Knight, 10, 10)
+npcList.push(npcPiece1)
 
 const start = Date.now();
 
@@ -75,6 +80,13 @@ async function init() {
             createGrid();
         }
         markPieceMenuForUpdate();
+
+        if (!npcSpawned) {
+            // place a single Knight (example test for NPC) at (10,10)
+            const npcPiece = new Piece(PieceType.Knight, 10, 10, NPC_OWNER);
+            state.pieces.push(npcPiece);
+            npcSpawned = true;
+          }
     });
 
     socket.on("move", (data) => {
@@ -82,8 +94,16 @@ async function init() {
         const execMove = Move.deserialize(move);
         state.makeMove(execMove);
 
-        //move the NPC
-        npcList.updateNPC();
+        // only fire NPC after a non-NPC piece moves
+        if (execMove.getPiece().getOwner() !== NPC_OWNER) {
+            const npc = state.pieces.find(p => p.getOwner() === NPC_OWNER);
+            const moves = state.pieceMoves(npc);
+            if (moves.length) {
+            // pick a random legal move
+            const choice = moves[Math.floor(Math.random() * moves.length)];
+            socket.emit("move", { move: choice.serialize(), sum: stateSum });
+            }
+        }
 
         if (
             execMove.getPiece().getX() === selectedX &&
@@ -633,6 +653,10 @@ function drawResources() {
 function drawPieces() {
     for (const piece of state.pieces) {
         //check for pieces' coordinate
+
+        //declare normal owner and npc owner
+        const ownerData = owners[piece.owner] || { color: "white", username: "NPC" };
+        const colorIndex = COLORS.indexOf(ownerData.color) * 64;
         if (
             piece.x >= camX &&
             piece.x < camX + visibleCols &&
@@ -645,7 +669,7 @@ function drawPieces() {
                 pieceAtlas,
 
                 piece.type * 64,
-                COLORS.indexOf(owners[piece.owner].color) * 64,
+                colorIndex,
                 64,
                 64,
 
@@ -674,7 +698,7 @@ function drawPieces() {
                 const name = owners[piece.owner].username;
                 ctx.font = '32px sans-serif';
                 ctx.textAlign = 'center';
-
+                
                 ctx.fillStyle = '#000000';
                 ctx.fillText(name, pieceX + 2 + size * 0.5, pieceY + 2);
 
