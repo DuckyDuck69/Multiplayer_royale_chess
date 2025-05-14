@@ -1,4 +1,4 @@
-import noise from "noisejs";
+import noise from "./noise.js";
 const Noise = noise.Noise;
 import Obstacle from "./obstacle.js";
 import Resource from "./resource.js";
