@@ -2,6 +2,8 @@
 import { io } from "socket.io-client";
 import { Noise } from "noisejs";
 
+const noise = new Noise(0xc4ee5);
+
 // This imports the INCREMENT value from the /common/chess.js file. Files in the
 // /common directory should be accessible from both the client and server.
 import State, { BLACK_OWNER, COLOR_VALUES, COLORS, WHITE_OWNER } from "../common/chess";
@@ -81,7 +83,7 @@ async function init() {
             const npcPiece = new Piece(PieceType.Knight, 10, 10, NPC_OWNER);
             state.pieces.push(npcPiece);
             npcSpawned = true;
-          }
+        }
     });
 
     socket.on("move", (data) => {
@@ -94,9 +96,9 @@ async function init() {
             const npc = state.pieces.find(p => p.getOwner() === NPC_OWNER);
             const moves = state.pieceMoves(npc);
             if (moves.length) {
-            // pick a random legal move
-            const choice = moves[Math.floor(Math.random() * moves.length)];
-            socket.emit("move", { move: choice.serialize(), sum: stateSum });
+                // pick a random legal move
+                const choice = moves[Math.floor(Math.random() * moves.length)];
+                socket.emit("move", { move: choice.serialize(), sum: stateSum });
             }
         }
 
@@ -688,7 +690,7 @@ function drawPieces() {
                 const name = owners[piece.owner].username;
                 ctx.font = '32px sans-serif';
                 ctx.textAlign = 'center';
-                
+
                 ctx.fillStyle = '#000000';
                 ctx.fillText(name, pieceX + 2 + size * 0.5, pieceY + 2);
 
