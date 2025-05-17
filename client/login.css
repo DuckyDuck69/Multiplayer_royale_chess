@@ -1,9 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
 
+@font-face {
+    font-family: 'Pixel Game Extrude';
+    src: url('assets/fonts/pixel-game.extrude.otf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-family: 'Pixel Game Regular';
+    src: url('assets/fonts/pixel-game.regular.otf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 body {
+    font-family: 'Orbitron', sans-serif;  
     margin: 0;
     padding: 0;
-    font-family: 'Orbitron', sans-serif;
     overflow: hidden;
     height: 100vh;
     position: relative;
@@ -56,11 +67,28 @@ body {
 }
 
 .title {
-    font-size: 4rem;
+    font-family: 'Pixel Game Regular', sans-serif;
+    font-size: 8rem;
     margin-bottom: 20px;
     color: #de82a5;
-    text-shadow: 0 0 10px #00000080;
-    animation: pulse 2.5s ease-in-out infinite;
+    text-shadow:
+    -4px -4px 0 #ffffff,
+    4px -4px 0 #000,
+    -4px 4px 0 #000,
+    4px 4px 0 #000,
+    -6px 2px 0 #000,
+    6px 2px 0 #000,
+    2px -6px 0 #000,
+    2px 6px 0 #000;
+}
+
+.title-line {
+    width: 80%;
+    height: 4px;
+    background: #dc7ea2ed;
+    margin: -10px auto 30px;
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(245, 177, 199, 0.4);
 }
 
 .login-container {
@@ -72,21 +100,24 @@ body {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
 }
 
-input {
+.login-row {
+    display: flex;
+    gap: 10px;
+}
+
+select {
     padding: 12px 20px;
     font-size: 1rem;
     border: 2px solid #d58ea9;
     background: #1e1e2e;
     color: #fff;
     border-radius: 10px;
-    margin-bottom: 20px;
-    width: 100%;
-    box-sizing: border-box;
-    text-align: center;
+    flex: 1;
+    cursor: pointer;
     transition: border-color 0.3s ease;
 }
 
-input:focus {
+select:focus {
     border-color: #f5b1c7;
     outline: none;
 }
@@ -100,8 +131,8 @@ button {
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 2rem;
-    width: 100%;
+    font-size: 1.5rem;
+    flex: 1;
 }
 
 button:hover {
@@ -115,7 +146,7 @@ button:hover {
     bottom: 20px;
     right: 20px;
     width: 260px;
-    max-height: 200px;
+    max-height: 300px;
     overflow-y: auto;
     background: rgba(20, 20, 40, 0.8);
     color: #f5b1c7;
@@ -161,4 +192,33 @@ option {
     flex-direction: row;
     gap: 1rem;
     padding: 1rem;
+}
+
+input {
+    padding: 12px 20px;
+    font-size: 1rem;
+    border: 2px solid #d58ea9;
+    background: #1e1e2e;
+    color: #fff;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    transition: all 0.3s ease;
+    font-family: 'Orbitron', sans-serif
+}
+
+input:focus {
+    border-color: #f5b1c7;
+    outline: none;
+    box-shadow: 0 0 10px rgba(245, 177, 199, 0.4);
+}
+
+input::placeholder {
+    color: #d58ea980;
+}
+
+input:hover {
+    border-color: #f5b1c7;
 }

@@ -27,8 +27,23 @@ body {
     z-index: -2;
 }
 
-#zoomButtons{
+#zoomButtons {
     display: flex;
+    justify-content: center;
+    padding-inline: 10px;
+    gap: 20px;
+}
+
+#zoomButtons button {
+    padding: 5px 5px;
+    background: #4c4c4c;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    color: #e2e2e2;
+    cursor: pointer;
+    
+    font-size: 1.5rem;
+    min-width: 60px;
 }
 
 .bg-image::after {
@@ -102,35 +117,47 @@ body {
 }
 
 
-#buttonContainer {
+#buttonContainer, #guideButtonContainer {
     position: absolute; 
     top: 20px; 
-    right: 20px; 
-}
-
-#buttonContainer {
     padding: 7px 25px;
     font-size: 16px;
     cursor: pointer;
-    background-color: #d58ea9; 
+    background-color: rgba(88, 87, 88, 0.8); 
     color: white; 
     border: none;
     border-radius: 10px;
+    box-shadow: 0 0 10px rgba(213, 142, 169, 0.4);
+    transition: all 0.2s ease;
 }
 
-#buttonContainer:hover {
-    background-color: #fdc4cd; 
+#buttonContainer {
+    right: 20px;
 }
 
-#tutorialButton {
+#guideButtonContainer {
+    left: 20px;
+}
+
+#buttonContainer:hover, #guideButtonContainer:hover {
+    background-color: rgba(213, 142, 169, 1);
+    box-shadow: 0 0 15px rgba(213, 142, 169, 0.6);
+}
+
+#tutorialButton, #guideButton {
+    font-size: 16px;
     background-color: transparent;
-    border-color: transparent;
-}
-#maingameButton {
-    background-color: transparent;
-    border-color: transparent;
+    border: none;
+    padding: 2px 5px;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
+#tutorialButton:hover, #guideButton:hover {
+    text-decoration: none;
+    color: #fff;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
 
 h1 {
     color: #d58ea9;
@@ -226,29 +253,6 @@ p {
     color: #fdc4cd;
 }
 
-#guideButtonContainer {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    padding: 7px 15px;
-    background-color: #d58ea9;
-    border-radius: 10px;
-}
-
-/* Button styling for both containers */
-#tutorialButton, #guideButton {
-    font-size: 16px;
-   
-    background-color: transparent;
-    border-color: transparent;
-    border: none;
-    padding: 2px 5px;
-}
-
-#tutorialButton:hover, #guideButton:hover {
-    text-decoration: none;
-}
-
 /* Piece images container */
 .piece-images {
     display: flex;
@@ -273,12 +277,10 @@ p {
     overflow: hidden;
     font-size: 2rem;
     color: white;
-    font-family: 'Cinzel', serif;
     border: none;
     box-shadow: none;
 }
 .win-screen button {
-    font-family: 'Cinzel', serif;
     margin-top: 20px;
     padding: 10px 20px;
     font-size: 1rem;
