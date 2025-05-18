@@ -27,24 +27,6 @@ body {
     z-index: -2;
 }
 
-#zoomButtons {
-    display: flex;
-    justify-content: center;
-    padding-inline: 10px;
-    gap: 20px;
-}
-
-#zoomButtons button {
-    padding: 5px 5px;
-    background: #4c4c4c;
-    margin-bottom: 10px;
-    margin-top: 10px;
-    color: #e2e2e2;
-    cursor: pointer;
-    
-    font-size: 1.5rem;
-    min-width: 60px;
-}
 
 .bg-image::after {
     content: '';
@@ -56,13 +38,102 @@ body {
     background: linear-gradient(to bottom, rgba(10, 18, 33, 0.4), rgba(10, 18, 33, 0.7));
     z-index: -1;
 }
+.button-container{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 20%;
+    margin-top: 150px;
+    flex-shrink: 0;
+    align-items: center;
+}
+#zoomIn{
+    background-color: rgb(91, 100, 156);
+}
+#zoomOut{
+    background-color: #b75a6a;
+}
+
+#zoomIn, #zoomOut{
+    color: blanchedalmond;
+    border: none;
+    border-radius: 8px;
+    font-size: 50px;
+    font-weight: bold;
+    width: 100px;
+    height: 100px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+#zoomIn:hover, #zoomOut:hover {
+    transform: scale(1.1);
+}
+
+#tutorialButton, #guideButton {
+    font-size: 30px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    background-color: #d4e08e;
+    color: royalblue;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    width: 300px;
+    height: 70px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#tutorialButton:hover, #guideButton:hover {
+    transform: scale(1.1);
+}
+
+#blackPiecesMenu button {
+    border-radius: 12px; /* Makes corners round */
+    border: 2px solid #d58ea9; 
+    padding: 10px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+#blackPiecesMenu button:hover {
+    background-color: #ffe6ec;
+    transform: scale(1.01);
+}
+
+#blackPiecesMenu {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+    gap: 10px;
+    justify-content: center;
+    align-items: start;
+    width: 100%;
+    /*scrolling added*/
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-right: 10px;
+    direction: rtl; /* forces scrollbar to left */
+    scrollbar-gutter: stable; /* prevents layout shift */
+}
+#blackPiecesMenu::-webkit-scrollbar {
+    width: 2px; /* basically invisible scrollbar */
+}
+
+.gameLayout {
+    display: flex;
+    justify-content: center; /*tell its children to flex center*/
+    align-items: start;  /*start the flex box at the left*/ 
+    flex-wrap: wrap;    
+    width: 100%;      
+  }
 
 .game-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-}
+    margin: 0;  
+    width: 60%;
+  }
 
 .header {
     text-align: center;
@@ -96,11 +167,12 @@ body {
     text-shadow: 0 0 10px rgba(163, 194, 255, 0.6);
 }
 
+
 #chessContainer {
     font-family: sans-serif;
-    display: flex;
     justify-content: center;  /* Center horizontally */
     margin: 0;  /* Remove default margin */
+    display: flex;
 }
 
 .image-credit{
@@ -117,47 +189,11 @@ body {
 }
 
 
-#buttonContainer, #guideButtonContainer {
-    position: absolute; 
-    top: 20px; 
-    padding: 7px 25px;
-    font-size: 16px;
-    cursor: pointer;
-    background-color: rgba(88, 87, 88, 0.8); 
-    color: white; 
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(213, 142, 169, 0.4);
-    transition: all 0.2s ease;
-}
-
-#buttonContainer {
-    right: 20px;
-}
-
-#guideButtonContainer {
-    left: 20px;
-}
-
-#buttonContainer:hover, #guideButtonContainer:hover {
-    background-color: rgba(213, 142, 169, 1);
-    box-shadow: 0 0 15px rgba(213, 142, 169, 0.6);
-}
-
-#tutorialButton, #guideButton {
-    font-size: 16px;
+#maingameButton {
     background-color: transparent;
-    border: none;
-    padding: 2px 5px;
-    color: white;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    border-color: transparent;
 }
 
-#tutorialButton:hover, #guideButton:hover {
-    text-decoration: none;
-    color: #fff;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
-}
 
 h1 {
     color: #d58ea9;
@@ -175,12 +211,14 @@ p {
     margin-bottom: 20px;
 }
 
+
 .info-box {
-    background-color: #f9f0f2;
-    border: 1px solid #d58ea9;
-    border-radius: 5px;
-    padding: 15px;
-    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 100px;
+    flex-wrap: wrap;
+    width: 20%;
 }
 
 .piece-info {
@@ -253,6 +291,7 @@ p {
     color: #fdc4cd;
 }
 
+
 /* Piece images container */
 .piece-images {
     display: flex;
@@ -277,10 +316,12 @@ p {
     overflow: hidden;
     font-size: 2rem;
     color: white;
+    font-family: 'Cinzel', serif;
     border: none;
     box-shadow: none;
 }
 .win-screen button {
+    font-family: 'Cinzel', serif;
     margin-top: 20px;
     padding: 10px 20px;
     font-size: 1rem;
@@ -294,4 +335,14 @@ p {
 
 .hidden {
     display: none;
+}
+.sideLayout {
+    display: grid;
+    grid-template-columns: 250px auto; 
+    gap: 20px;
+    align-items: start;
+    justify-content: center;
+    margin: 0 auto;
+    max-width: 1400px; 
+    padding-top: 20px;
 }
