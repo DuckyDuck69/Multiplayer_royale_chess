@@ -10,35 +10,27 @@
     </head>
     <body>
         <div class="bg-image"></div>
-        <div class = "gameLayout">
-            <div class="info-box">
-                <h2>Pieces (Black)</h2>
-                <div id="blackPiecesMenu"></div>
+        <div id = "zoomButtons">
+            <button id="zoomIn">+</button>
+            <button id="zoomOut">-</button>
+        </div>
+        <div id="buttonContainer">
+            <button id="tutorialButton">Tutorial</button>
+        </div>
+        <div id="guideButtonContainer">
+            <button id="guideButton">Game Guide</button>
+        </div>
+        <div class = 'game-container'>
+            <div id="chessContainer">
+                <canvas id="chessBoard"></canvas>
             </div>
-            <div class = "game-container" >
-                <div class = "header">
-                    <h1>Welcome to the fantasy world</h1>
-                    <div class="subtitle">A Fantasy Chess Adventure</div>
-                </div>
-                <div id="chessContainer">
-                    <canvas id="chessBoard"></canvas>
-                </div>
-            </div>
-            <div class = "button-container">
-                <div id = "zoomButtons">
-                    <button id="zoomIn">+</button>
-                    <button id="zoomOut">-</button>
-                </div>
-                <div id="buttonContainer">
-                    <button id="tutorialButton">Tutorial</button>
-                </div>
-                <div id="guideButtonContainer">
-                    <button id="guideButton">Game Guide</button>
-                </div>
-            </div>
-        </div>    
+        </div>
         <div id="upgrade-menu" class="hidden">
             <div id="upgrade-options"></div>
+        </div>
+        <!-- Piece Tracking Menu -->
+        <div class="info-box">
+            <div class="button-container" id="blackPiecesMenu"></div>
         </div>
         
 
