@@ -671,7 +671,9 @@ function drawResources() {
 
 function drawPieces() {
     const { left, top, right, bottom } = cameraBounds();
-    for (const piece of state.pieces) {
+    for (const piece of
+        state.pieces
+            .sort((a, b) => +(a.getType() === PieceType.King) - +(b.getType() === PieceType.King))) {
         //check for pieces' coordinate
 
         //declare normal owner and npc owner
@@ -686,8 +688,8 @@ function drawPieces() {
             if (piece.owner !== owner && state.board.obstaclesAt(piece.x, piece.y).some(o => o.getType() === ObstacleType.TallGrass)) {
                 continue;
             }
-            const pieceX = (piece.x - camX);
-            const pieceY = (piece.y - camY);
+            const idleTime = (Date.now() - start) / 1000 + (piece.x + piece.y);
+            const squish = 1.0 + Math.sin(idleTime * 2.0) * 0.04;
             ctx.drawImage(
                 pieceAtlas,
 
@@ -696,25 +698,25 @@ function drawPieces() {
                 64,
                 64,
 
-                pieceX,
-                pieceY,
-                1,
-                1
+                piece.x - (squish - 1) / 2.0,
+                piece.y - (1.0 / squish - 1) / 2.0,
+                squish,
+                1.0 / squish,
             );
             if (piece.isStunned()) {
-                ctx.drawImage(stunImg, pieceX, pieceY, 1, 1);
+                ctx.drawImage(stunImg, piece.x, piece.y, 1, 1);
             }
             if (piece.getType() === PieceType.Juggernaut) {
                 ctx.drawImage(
                     juggernautStrengthImg[piece.getJuggernautStrength() - 1],
-                    pieceX,
-                    pieceY,
+                    piece.x,
+                    piece.y,
                     1,
                     1
                 );
             }
             if (piece.isChimera() && piece.hasTag(PieceTags.ChimeraMoveable)) {
-                ctx.drawImage(chimeraMoveableImg, pieceX, pieceY, 1, 1);
+                ctx.drawImage(chimeraMoveableImg, piece.x, piece.y, 1, 1);
             }
 
             if (piece.getType() == PieceType.King) {
@@ -723,10 +725,10 @@ function drawPieces() {
                 ctx.textAlign = 'center';
 
                 ctx.fillStyle = '#000000';
-                ctx.fillText(name, pieceX + 0.01 + 0.5, pieceY + 0.01);
+                ctx.fillText(name, piece.x + 0.05 + 0.5, piece.y + 0.05);
 
                 ctx.fillStyle = '#ffffff';
-                ctx.fillText(name, pieceX + 0.5, pieceY);
+                ctx.fillText(name, piece.x + 0.5, piece.y);
             }
         }
     }
