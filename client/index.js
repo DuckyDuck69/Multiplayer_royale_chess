@@ -17,6 +17,8 @@ let state = new State(160, 160);
 let owners = {};
 let socket, stateSum;
 let owner = null;
+// Store currently active upgrade modal to prevent duplicates
+let activeUpgradeModal = null;
 
 //create NPC list and add 1 npc for testing
 const npcList = []
@@ -863,15 +865,12 @@ document
 
 //Piece Tracking Menu
 
-// Store currently active upgrade modal to prevent duplicates
-let activeUpgradeModal = null;
-
 function pieceMenu() {
     const menu = document.getElementById("blackPiecesMenu");
     menu.innerHTML = "";
 
     for (const piece of state.pieces) {
-        const pieceButton = document.createElement("button");
+        let pieceButton = document.createElement("button");
         pieceButton.piece = piece;
 
         // Teleport to the piece's location
