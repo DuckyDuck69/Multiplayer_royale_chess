@@ -67,8 +67,8 @@ async function init() {
                 return;
             }
 
-            camX = Math.min(Math.max(king.getX() - 8, 0), 160 - 8);
-            camY = Math.min(Math.max(king.getY() - 8, 0), 160 - 8);
+            cameraX = king.getX() + 0.5;
+            cameraY = king.getY() + 0.5;
 
             recvFirstState = true;
         }
@@ -261,8 +261,14 @@ export const BOARD_WIDTH = 160;
 export const BOARD_HEIGHT = 160;
 
 //initialize camera view
-let camX = 0;
-let camY = 0;
+const camX = 0;
+const camY = 0;
+
+let cameraX = 0;
+let cameraY = 0;
+let cameraZoom = 10;
+
+
 let visibleRow = 16;
 let visibleCols = 16;
 let dragSpeed = 1;
@@ -272,8 +278,6 @@ let mouseTileX = 0,
 let selected = false,
     selectedX = 0,
     selectedY = 0;
-
-let size = displayHeight / visibleCols; //calculate the size of each square
 
 let gridInitialized = false;
 
@@ -293,10 +297,10 @@ export default class Tile {
         this.isObstacle = false;
     }
     show(color) {
-        let x_coor = (this.x - camX) * size;
-        let y_coor = (this.y - camY) * size;
+        let x_coor = (this.x - camX);
+        let y_coor = (this.y - camY);
         ctx.fillStyle = color;
-        ctx.fillRect(x_coor, y_coor, size, size);
+        ctx.fillRect(x_coor, y_coor, 1, 1);
     }
     setWall() {
         //create a new method to color the wall and set the state
@@ -310,8 +314,8 @@ export default class Tile {
     }
     toScreenCoor() {
         return {
-            screenX: (this.x - camX) * size,
-            screenY: (this.y - camY) * size
+            screenX: (this.x - camX),
+            screenY: (this.y - camY),
         }
     }
 }
@@ -322,7 +326,6 @@ function zoomIn() {
     if (visibleCols > 2) {
         visibleCols -= 2;
         visibleRow -= 2;
-        size = displayHeight / visibleCols
         needsRedraw = true;
     }
     console.log("zoom in")
@@ -333,7 +336,6 @@ function zoomOut() {
         console.log(visibleCols)
         visibleCols += 2;
         visibleRow += 2;
-        size = displayHeight / visibleCols
         needsRedraw = true;
     }
 }
@@ -345,12 +347,28 @@ function markPieceMenuForUpdate() {
     pieceMenuNeedsUpdate = true;
 }
 
+function canvasSpaceToWorldSpace(xPx, yPx) {
+    return {
+        x: ((xPx - myCanvas.clientWidth / 2) / myCanvas.clientWidth) * cameraZoom + cameraX,
+        y: ((yPx - myCanvas.clientHeight / 2) / myCanvas.clientHeight) * cameraZoom + cameraY,
+    }
+}
+
 //draw the board at a consistent fps
 function renderLoop() {
     if (!owner) {
         requestAnimationFrame(renderLoop);
         return;
     }
+
+    ctx.resetTransform();
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, myCanvas.width, myCanvas.height);
+
+    ctx.translate(myCanvas.width / 2, myCanvas.height / 2);
+    ctx.scale(myCanvas.width / cameraZoom, myCanvas.height / cameraZoom);
+    ctx.translate(-cameraX, -cameraY);
+
 
     colorBoard(); //the board has to be drawn first
     drawObstacles(); //draw the obstacle again each time the board is drawn
@@ -464,6 +482,11 @@ myCanvas.addEventListener("mousedown", function (event) {
     console.log("mousedown");
 });
 
+function ensureCameraInBounds() {
+    cameraX = Math.min(Math.max(cameraX, cameraZoom / 2), BOARD_WIDTH - cameraZoom / 2);
+    cameraY = Math.min(Math.max(cameraY, cameraZoom / 2), BOARD_HEIGHT - cameraZoom / 2);
+}
+
 myCanvas.addEventListener("mousemove", function (event) {
     //mouse listener that displays possible moves of pieces when clicked
     if (isDragging) {
@@ -472,38 +495,27 @@ myCanvas.addEventListener("mousemove", function (event) {
         const xDistance = event.clientX - moveStartX;
         const yDistance = event.clientY - moveStartY;
 
-        dragTileX += xDistance;
-        dragTileY += yDistance;
+        const xWorld = (xDistance / myCanvas.clientWidth) * cameraZoom;
+        const yWorld = (yDistance / myCanvas.clientHeight) * cameraZoom;
 
-        const threshold = size;
+        cameraX -= xWorld;
+        cameraY -= yWorld;
 
-        //only move if drag pass threshold to avoid issues
-        while (Math.abs(dragTileX) >= threshold) {
-            //move 1 tile at a time (current dragspeed value)
-
-            //the minus sign is to treat our dragging cursor movement better since
-            //we drag from right->left to make the chess move to the right
-            const moveX = dragTileX > 0 ? -dragSpeed : dragSpeed;
-            updateCamera(moveX, 0);
-            console.log("camX:", camX);
-            dragTileX += moveX * threshold;
-
-            needsRedraw = true; //signal that we need to draw the board
-        }
-        while (Math.abs(dragTileY) >= threshold) {
-            //move 1 tile at a time (current dragspeed value)
-            const moveY = dragTileY > 0 ? -dragSpeed : dragSpeed;
-            updateCamera(0, moveY);
-            console.log("camY", camY);
-            dragTileY += moveY * threshold;
-
-            needsRedraw = true;
-        }
         moveStartX = event.clientX;
         moveStartY = event.clientY;
     }
-    mouseTileX = Math.floor((event.offsetX) / size) + camX;
-    mouseTileY = Math.floor((event.offsetY) / size) + camY;
+    const { x, y } = canvasSpaceToWorldSpace(event.offsetX, event.offsetY);
+    mouseTileX = Math.min(Math.max(Math.floor(x), 0), BOARD_WIDTH - 1);
+    mouseTileY = Math.min(Math.max(Math.floor(y), 0), BOARD_HEIGHT - 1);
+
+    ensureCameraInBounds();
+});
+
+myCanvas.addEventListener("mousewheel", (event) => {
+    event.preventDefault();
+
+    cameraZoom = Math.min(Math.max(cameraZoom * (1.0 + event.deltaY * 0.002), 4), 32);
+    ensureCameraInBounds();
 });
 
 myCanvas.addEventListener("mouseup", function (event) {
@@ -573,14 +585,30 @@ function createGrid() {
     }
 }
 
+function cameraBounds() {
+    const { x: left, y: top } = canvasSpaceToWorldSpace(0, 0);
+    const { x: right, y: bottom } = canvasSpaceToWorldSpace(myCanvas.clientWidth, myCanvas.clientHeight);
+    return {
+        left: Math.floor(left),
+        top: Math.floor(top),
+        right: Math.ceil(right),
+        bottom: Math.ceil(bottom),
+    }
+}
+
 function colorBoard() {
     /*
     Color the visible board
     */
-    for (let x = camX; x < BOARD_WIDTH; x++) {
-        for (let y = camY; y < BOARD_HEIGHT; y++) {
-            let num = x + y * BOARD_WIDTH; //retrive the tile number
 
+    const { left, top, right, bottom } = cameraBounds();
+    for (let x = left; x <= right; x++) {
+        for (let y = top; y <= bottom; y++) {
+            if (x < 0 || y < 0 || x >= BOARD_WIDTH || y >= BOARD_HEIGHT) {
+                continue;
+            }
+
+            let num = x + y * BOARD_WIDTH; //retrive the tile number
             //color differently for even and odd BOARD_HEIGHT differently
             if (!grid[num]) {
                 continue;
@@ -595,20 +623,21 @@ function colorBoard() {
 }
 
 function drawObstacles() {
+    const { left, top, right, bottom } = cameraBounds();
     for (const obstacle of state.board.obstacles) {
         //check if the obstacle is within the visible section
         if (
-            obstacle.x >= camX &&
-            obstacle.x < camX + visibleCols &&
-            obstacle.y >= camY &&
-            obstacle.y < camY + visibleRow
+            obstacle.x >= left &&
+            obstacle.x < right &&
+            obstacle.y >= top &&
+            obstacle.y < bottom
         ) {
             ctx.drawImage(
                 obstacleImages[obstacle.getType()],
-                (obstacle.x - camX) * size, //update the coordinate of the obstacles
-                (obstacle.y - camY) * size,
-                size,
-                size
+                (obstacle.x - camX),  //update the coordinate of the obstacles
+                (obstacle.y - camY),
+                1,
+                1
             );
         }
     }
@@ -616,30 +645,32 @@ function drawObstacles() {
 
 function drawResources() {
     const rotation = (Date.now() - start) * 0.0001;
+    const { left, top, right, bottom } = cameraBounds();
     for (const resource of state.board.resources) {
         if (
-            resource.x >= camX &&
-            resource.x < camX + visibleCols &&
-            resource.y >= camY &&
-            resource.y < camY + visibleRow
+            resource.x >= left &&
+            resource.x < right &&
+            resource.y >= top &&
+            resource.y < bottom
         ) {
 
-            ctx.translate((resource.x - camX + 0.5) * size, (resource.y - camY + 0.5) * size);
+            ctx.translate((resource.x - camX + 0.5), (resource.y - camY + 0.5));
             ctx.rotate(resource.x + resource.y * 1.22222 + rotation);
             ctx.drawImage(
                 resourceImages[resource.getAmount() >= 5 ? 2 : (resource.getAmount() === 2 ? 1 : 0)],
-                -0.5 * size,
-                -0.5 * size,
-                size,
-                size
+                -0.5,
+                -0.5,
+                1,
+                1
             );
             ctx.rotate(-1.0 * (resource.x + resource.y * 1.22222 + rotation));
-            ctx.translate(-(resource.x - camX + 0.5) * size, -(resource.y - camY + 0.5) * size);
+            ctx.translate(-(resource.x - camX + 0.5), -(resource.y - camY + 0.5));
         }
     }
 }
 
 function drawPieces() {
+    const { left, top, right, bottom } = cameraBounds();
     for (const piece of state.pieces) {
         //check for pieces' coordinate
 
@@ -647,16 +678,16 @@ function drawPieces() {
         const ownerData = owners[piece.owner] || { color: "white", username: "NPC" };
         const colorIndex = COLORS.indexOf(ownerData.color) * 64;
         if (
-            piece.x >= camX &&
-            piece.x < camX + visibleCols &&
-            piece.y >= camY &&
-            piece.y < camY + visibleRow
+            piece.x >= left &&
+            piece.x < right &&
+            piece.y >= top &&
+            piece.y < bottom
         ) {
             if (piece.owner !== owner && state.board.obstaclesAt(piece.x, piece.y).some(o => o.getType() === ObstacleType.TallGrass)) {
                 continue;
             }
-            const pieceX = (piece.x - camX) * size;
-            const pieceY = (piece.y - camY) * size;
+            const pieceX = (piece.x - camX);
+            const pieceY = (piece.y - camY);
             ctx.drawImage(
                 pieceAtlas,
 
@@ -667,35 +698,35 @@ function drawPieces() {
 
                 pieceX,
                 pieceY,
-                size,
-                size
+                1,
+                1
             );
             if (piece.isStunned()) {
-                ctx.drawImage(stunImg, pieceX, pieceY, size, size);
+                ctx.drawImage(stunImg, pieceX, pieceY, 1, 1);
             }
             if (piece.getType() === PieceType.Juggernaut) {
                 ctx.drawImage(
                     juggernautStrengthImg[piece.getJuggernautStrength() - 1],
                     pieceX,
                     pieceY,
-                    size,
-                    size
+                    1,
+                    1
                 );
             }
             if (piece.isChimera() && piece.hasTag(PieceTags.ChimeraMoveable)) {
-                ctx.drawImage(chimeraMoveableImg, pieceX, pieceY, size, size);
+                ctx.drawImage(chimeraMoveableImg, pieceX, pieceY, 1, 1);
             }
 
             if (piece.getType() == PieceType.King) {
                 const name = owners[piece.owner].username;
-                ctx.font = '32px sans-serif';
+                ctx.font = '1px sans-serif';
                 ctx.textAlign = 'center';
 
                 ctx.fillStyle = '#000000';
-                ctx.fillText(name, pieceX + 2 + size * 0.5, pieceY + 2);
+                ctx.fillText(name, pieceX + 0.01 + 0.5, pieceY + 0.01);
 
                 ctx.fillStyle = '#ffffff';
-                ctx.fillText(name, pieceX + size * 0.5, pieceY);
+                ctx.fillText(name, pieceX + 0.5, pieceY);
             }
         }
     }
@@ -706,7 +737,7 @@ function showMoves() {
     if (piece) {
         const moves = state.pieceMoves(piece);
         for (const move of moves) {
-            ctx.drawImage(moveDot, (move.x - camX) * size, (move.y - camY) * size, size, size);
+            ctx.drawImage(moveDot, (move.x - camX), (move.y - camY), 1, 1);
         }
     }
 }
@@ -715,10 +746,10 @@ function cooldownHighLight() {
     for (const piece of state.pieces) {
         if (piece.isOnCooldown()) {
 
-            let fillSize = piece.cooldownPercent() * size;
+            let fillSize = piece.cooldownPercent();
             //get Tile num, then color them according to the cooling percent
-            const xCoor = (piece.getX() - camX) * size;
-            const yCoor = (piece.getY() - camY) * size + (size - fillSize);;
+            const xCoor = (piece.getX() - camX);
+            const yCoor = (piece.getY() - camY) + (1 - fillSize);
 
             const percent = 1 - piece.cooldownPercent()  //flip it because this method go from 0 to 1
             //math rgb to fade in this order: red -> yellow -> green
@@ -735,7 +766,7 @@ function cooldownHighLight() {
             }
             ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, 0.6)`
 
-            ctx.fillRect(xCoor, yCoor, size, fillSize);
+            ctx.fillRect(xCoor, yCoor, 1, fillSize);
         }
     }
 }
