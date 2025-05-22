@@ -80,13 +80,11 @@ async function init() {
         }
         markPieceMenuForUpdate();
 
-        if (!npcSpawned) {
+        //if (!npcList.length) {
             // place a single Knight (example test for NPC) at (10,10)
-            const npcPiece = new Piece(PieceType.Knight, 10, 10, NPC_OWNER);
+            const npcPiece = new Piece(PieceType.Knight, 5, 5, NPC_OWNER);
             state.pieces.push(npcPiece);
-            //console.log("NPC "+ npcPiece1.getNpcType())
-            npcSpawned = true;
-        }
+        //}
     });
 
     socket.on("move", (data) => {
@@ -671,7 +669,6 @@ function drawResources() {
         }
     }
 }
-
 function drawPieces() {
     const { left, top, right, bottom } = cameraBounds();
     for (const piece of
@@ -680,7 +677,7 @@ function drawPieces() {
         //check for pieces' coordinate
 
         //declare normal owner and npc owner
-        const ownerData = owners[piece.owner] || { color: "white", username: "NPC" };
+        const ownerData = owners[piece.owner] || { color: "white", username: "NPC_OWNER" };
         const colorIndex = COLORS.indexOf(ownerData.color) * 64;
         if (
             piece.x >= left &&
@@ -869,7 +866,7 @@ document
 //Piece Tracking Menu
 
 function pieceMenu() {
-    const menu = document.getElementById("blackPiecesMenu");
+    const menu = document.getElementById("piecesMenu");
     menu.innerHTML = "";
 
     for (const piece of state.pieces) {
@@ -886,7 +883,7 @@ function pieceMenu() {
 
         // Piece icon image
         const pieceIcon = new Image();
-        pieceIcon.src = (piece.owner === WHITE_OWNER ? whitePieceImgs : blackPieceImgs)[piece.type].src;
+        pieceIcon.src = (piece.owner === NPC_OWNER ? blackPieceImgs : whitePieceImgs)[piece.type].src;
 
         // Label of the piece
         var pieceName = pieceNames[piece.type];
@@ -974,7 +971,7 @@ function pieceMenu() {
 
 
 function updateMenuState() {
-    const menu = document.getElementById("blackPiecesMenu");
+    const menu = document.getElementById("piecesMenu");
     for (const button of menu.children) {
         const piece = button.piece;
 

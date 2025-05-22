@@ -103,7 +103,7 @@ body {
     transform: scale(1.1);
 }
 
-#blackPiecesMenu button {
+#piecesMenu button {
     border-radius: 12px;
     /* Makes corners round */
     border: 2px solid #d58ea9;
@@ -113,12 +113,12 @@ body {
     transition: background-color 0.3s, transform 0.2s;
 }
 
-#blackPiecesMenu button:hover {
+#piecesMenu button:hover {
     background-color: #ffe6ec;
     transform: scale(1.01);
 }
 
-#blackPiecesMenu {
+#piecesMenu {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 10px;
@@ -135,7 +135,7 @@ body {
     /* prevents layout shift */
 }
 
-#blackPiecesMenu::-webkit-scrollbar {
+#piecesMenu::-webkit-scrollbar {
     width: 2px;
     /* basically invisible scrollbar */
 }
