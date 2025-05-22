@@ -94,6 +94,7 @@ const DEFAULT_LAYOUT = [
     PieceType.Rook,
 ];
 
+export const NPC_OWNER=2;
 export const BLACK_OWNER = 1;
 export const WHITE_OWNER = 0;
 

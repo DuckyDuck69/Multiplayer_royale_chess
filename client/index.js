@@ -6,7 +6,7 @@ const noise = new Noise(0xc4ee5);
 
 // This imports the INCREMENT value from the /common/chess.js file. Files in the
 // /common directory should be accessible from both the client and server.
-import State, { BLACK_OWNER, COLOR_VALUES, COLORS, WHITE_OWNER } from "../common/chess";
+import State, {COLOR_VALUES, COLORS, WHITE_OWNER, NPC_OWNER} from "../common/chess";
 import { ObstacleType } from "../common/obstacle";
 import Piece, { PieceTags, PieceType } from "../common/piece";
 import Move from "../common/move";
@@ -17,6 +17,8 @@ let state = new State(160, 160);
 let owners = {};
 let socket, stateSum;
 let owner = null;
+// Store currently active upgrade modal to prevent duplicates
+let activeUpgradeModal = null;
 
 //create NPC list and add 1 npc for testing
 const npcList = []
@@ -82,6 +84,7 @@ async function init() {
             // place a single Knight (example test for NPC) at (10,10)
             const npcPiece = new Piece(PieceType.Knight, 10, 10, NPC_OWNER);
             state.pieces.push(npcPiece);
+            //console.log("NPC "+ npcPiece1.getNpcType())
             npcSpawned = true;
         }
     });
@@ -865,15 +868,12 @@ document
 
 //Piece Tracking Menu
 
-// Store currently active upgrade modal to prevent duplicates
-let activeUpgradeModal = null;
-
 function pieceMenu() {
     const menu = document.getElementById("blackPiecesMenu");
     menu.innerHTML = "";
 
     for (const piece of state.pieces) {
-        const pieceButton = document.createElement("button");
+        let pieceButton = document.createElement("button");
         pieceButton.piece = piece;
 
         // Teleport to the piece's location
@@ -889,7 +889,33 @@ function pieceMenu() {
         pieceIcon.src = (piece.owner === WHITE_OWNER ? whitePieceImgs : blackPieceImgs)[piece.type].src;
 
         // Label of the piece
-        const pieceName = pieceNames[piece.type];
+        var pieceName = pieceNames[piece.type];
+        switch (pieceNames[piece.type]){
+            case "pawn":pieceName="Pawn";
+            break;
+            case "knight":pieceName="Knight";
+            break;
+            case "bishop":pieceName="Bishop";
+            break;
+            case "rook":pieceName="Rook";
+            break;
+            case "queen":pieceName="Queen";
+            break;
+            case "king":pieceName="King";
+            break;
+            case "lion_chimera":pieceName="Chimera's Lion";
+            break;
+            case "goat_chimera":pieceName="Chimera's Goat";
+            break;
+            case "medusa":pieceName="Gorgon";
+            break;
+            case "pegasus":pieceName="Pegasus";
+            break;
+            case "juggernaut":pieceName="Juggernaut";
+            break;
+            case "builder":pieceName="Builder";
+            break;
+        }
         const label = document.createTextNode(`${pieceName} at (${piece.getX()},${piece.getY()}) ${piece.getXP()} xp `);
 
         // Cooldown percent 
