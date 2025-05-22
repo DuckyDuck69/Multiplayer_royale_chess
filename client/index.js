@@ -6,7 +6,7 @@ const noise = new Noise(0xc4ee5);
 
 // This imports the INCREMENT value from the /common/chess.js file. Files in the
 // /common directory should be accessible from both the client and server.
-import State, {COLOR_VALUES, COLORS, WHITE_OWNER, NPC_OWNER} from "../common/chess";
+import State, { COLOR_VALUES, COLORS, WHITE_OWNER, NPC_OWNER } from "../common/chess";
 import { ObstacleType } from "../common/obstacle";
 import Piece, { PieceTags, PieceType } from "../common/piece";
 import Move from "../common/move";
@@ -79,31 +79,12 @@ async function init() {
             createGrid();
         }
         markPieceMenuForUpdate();
-
-        if (!npcSpawned) {
-            // place a single Knight (example test for NPC) at (10,10)
-            const npcPiece = new Piece(PieceType.Knight, 10, 10, NPC_OWNER);
-            state.pieces.push(npcPiece);
-            //console.log("NPC "+ npcPiece1.getNpcType())
-            npcSpawned = true;
-        }
     });
 
     socket.on("move", (data) => {
         const { move, sum } = data;
         const execMove = Move.deserialize(move);
         state.makeMove(execMove);
-
-        // only fire NPC after a non-NPC piece moves
-        if (execMove.getPiece().getOwner() !== NPC_OWNER) {
-            const npc = state.pieces.find(p => p.getOwner() === NPC_OWNER);
-            const moves = state.pieceMoves(npc);
-            if (moves.length) {
-                // pick a random legal move
-                const choice = moves[Math.floor(Math.random() * moves.length)];
-                socket.emit("move", { move: choice.serialize(), sum: stateSum });
-            }
-        }
 
         if (
             execMove.getPiece().getX() === selectedX &&
@@ -112,7 +93,9 @@ async function init() {
             selected = false;
         }
 
+        console.log(`Current state sum: ${stateSum}`);
         stateSum = State.sum(state);
+        console.log(`New state sum: ${stateSum} (versus server's: ${sum})`);
 
         if (stateSum !== sum) {
             console.warn("client-server desync, requesting full update...");
@@ -271,6 +254,10 @@ let cameraX = 0;
 let cameraY = 0;
 let cameraZoom = 10;
 
+let targetCameraX = 0;
+let targetCameraY = 0;
+let targetCameraZoom = 0;
+let cameraAnimating = false;
 
 let visibleRow = 16;
 let visibleCols = 16;
@@ -326,21 +313,12 @@ export default class Tile {
 createGrid();
 
 function zoomIn() {
-    if (visibleCols > 2) {
-        visibleCols -= 2;
-        visibleRow -= 2;
-        needsRedraw = true;
-    }
-    console.log("zoom in")
+    animateCameraTo(cameraX, cameraY, cameraZoom * 4 / 5)
+    ensureCameraInBounds();
 }
 function zoomOut() {
-    console.log("zoom out")
-    if (visibleCols <= BOARD_HEIGHT - 2) {
-        console.log(visibleCols)
-        visibleCols += 2;
-        visibleRow += 2;
-        needsRedraw = true;
-    }
+    animateCameraTo(cameraX, cameraY, cameraZoom * 5 / 4)
+    ensureCameraInBounds();
 }
 
 let needsRedraw = true;
@@ -373,6 +351,7 @@ function renderLoop() {
     ctx.translate(-cameraX, -cameraY);
 
 
+    updateCamera();
     colorBoard(); //the board has to be drawn first
     drawObstacles(); //draw the obstacle again each time the board is drawn
     drawResources();
@@ -391,27 +370,35 @@ function renderLoop() {
     requestAnimationFrame(renderLoop);
 }
 
+function lerp(a, b, c) {
+    return a + (b - a) * c;
+}
 
-function updateCamera(tileX, tileY) {
-    //handle bounds
-    if (camX + tileX < 0) {
-        camX = 0;
-    } else {
-        if (camX + tileX < BOARD_WIDTH - visibleCols) {
-            camX = camX + tileX;
-        } else {
-            camX = BOARD_WIDTH - visibleCols;
+function updateCamera() {
+    if (cameraAnimating) {
+        cameraX = lerp(cameraX, targetCameraX, 0.2);
+        cameraY = lerp(cameraY, targetCameraY, 0.2);
+        cameraZoom = lerp(cameraZoom, targetCameraZoom, 0.2);
+
+        const ESPILON = 0.001;
+        if (Math.abs(cameraX - targetCameraX) < ESPILON
+            && Math.abs(cameraY - targetCameraY) < ESPILON
+            && Math.abs(cameraZoom - targetCameraZoom) < ESPILON) {
+            cameraX = targetCameraX;
+            cameraY = targetCameraY;
+            cameraZoom = targetCameraZoom;
+            cameraAnimating = false;
         }
+
+        ensureCameraInBounds();
     }
-    if (camY + tileY < 0) {
-        camY = 0;
-    } else {
-        if (camY + tileY < BOARD_HEIGHT - visibleRow) {
-            camY = camY + tileY;
-        } else {
-            camY = BOARD_HEIGHT - visibleRow;
-        }
-    }
+}
+
+function animateCameraTo(x, y, zoom) {
+    cameraAnimating = true;
+    targetCameraX = x;
+    targetCameraY = y;
+    targetCameraZoom = zoom || cameraZoom;
 }
 
 window.addEventListener("load", function () {
@@ -486,6 +473,7 @@ myCanvas.addEventListener("mousedown", function (event) {
 });
 
 function ensureCameraInBounds() {
+    cameraZoom = Math.min(Math.max(cameraZoom, 4), 32);
     cameraX = Math.min(Math.max(cameraX, cameraZoom / 2), BOARD_WIDTH - cameraZoom / 2);
     cameraY = Math.min(Math.max(cameraY, cameraZoom / 2), BOARD_HEIGHT - cameraZoom / 2);
 }
@@ -494,6 +482,8 @@ myCanvas.addEventListener("mousemove", function (event) {
     //mouse listener that displays possible moves of pieces when clicked
     if (isDragging) {
         //get the coordinate after moving the mouse
+
+        cameraAnimating = false;
 
         const xDistance = event.clientX - moveStartX;
         const yDistance = event.clientY - moveStartY;
@@ -517,7 +507,8 @@ myCanvas.addEventListener("mousemove", function (event) {
 myCanvas.addEventListener("mousewheel", (event) => {
     event.preventDefault();
 
-    cameraZoom = Math.min(Math.max(cameraZoom * (1.0 + event.deltaY * 0.002), 4), 32);
+    cameraAnimating = false;
+    cameraZoom *= (1.0 + event.deltaY * 0.002);
     ensureCameraInBounds();
 });
 
@@ -637,8 +628,8 @@ function drawObstacles() {
         ) {
             ctx.drawImage(
                 obstacleImages[obstacle.getType()],
-                (obstacle.x - camX),  //update the coordinate of the obstacles
-                (obstacle.y - camY),
+                obstacle.x,  //update the coordinate of the obstacles
+                obstacle.y,
                 1,
                 1
             );
@@ -657,7 +648,7 @@ function drawResources() {
             resource.y < bottom
         ) {
 
-            ctx.translate((resource.x - camX + 0.5), (resource.y - camY + 0.5));
+            ctx.translate((resource.x + 0.5), (resource.y + 0.5));
             ctx.rotate(resource.x + resource.y * 1.22222 + rotation);
             ctx.drawImage(
                 resourceImages[resource.getAmount() >= 5 ? 2 : (resource.getAmount() === 2 ? 1 : 0)],
@@ -667,7 +658,7 @@ function drawResources() {
                 1
             );
             ctx.rotate(-1.0 * (resource.x + resource.y * 1.22222 + rotation));
-            ctx.translate(-(resource.x - camX + 0.5), -(resource.y - camY + 0.5));
+            ctx.translate(-(resource.x + 0.5), -(resource.y + 0.5));
         }
     }
 }
@@ -878,9 +869,7 @@ function pieceMenu() {
 
         // Teleport to the piece's location
         pieceButton.addEventListener("click", () => {
-            const centerRange = Math.floor(visibleCols / 2);
-            camX = Math.max(0, Math.min(piece.getX() - centerRange, BOARD_WIDTH - visibleCols));
-            camY = Math.max(0, Math.min(piece.getY() - centerRange, BOARD_HEIGHT - visibleRow));
+            animateCameraTo(piece.getX() + 0.5, piece.getY() + 0.5, 8);
             needsRedraw = true;
         });
 
@@ -890,31 +879,31 @@ function pieceMenu() {
 
         // Label of the piece
         var pieceName = pieceNames[piece.type];
-        switch (pieceNames[piece.type]){
-            case "pawn":pieceName="Pawn";
-            break;
-            case "knight":pieceName="Knight";
-            break;
-            case "bishop":pieceName="Bishop";
-            break;
-            case "rook":pieceName="Rook";
-            break;
-            case "queen":pieceName="Queen";
-            break;
-            case "king":pieceName="King";
-            break;
-            case "lion_chimera":pieceName="Chimera's Lion";
-            break;
-            case "goat_chimera":pieceName="Chimera's Goat";
-            break;
-            case "medusa":pieceName="Gorgon";
-            break;
-            case "pegasus":pieceName="Pegasus";
-            break;
-            case "juggernaut":pieceName="Juggernaut";
-            break;
-            case "builder":pieceName="Builder";
-            break;
+        switch (pieceNames[piece.type]) {
+            case "pawn": pieceName = "Pawn";
+                break;
+            case "knight": pieceName = "Knight";
+                break;
+            case "bishop": pieceName = "Bishop";
+                break;
+            case "rook": pieceName = "Rook";
+                break;
+            case "queen": pieceName = "Queen";
+                break;
+            case "king": pieceName = "King";
+                break;
+            case "lion_chimera": pieceName = "Chimera's Lion";
+                break;
+            case "goat_chimera": pieceName = "Chimera's Goat";
+                break;
+            case "medusa": pieceName = "Gorgon";
+                break;
+            case "pegasus": pieceName = "Pegasus";
+                break;
+            case "juggernaut": pieceName = "Juggernaut";
+                break;
+            case "builder": pieceName = "Builder";
+                break;
         }
         const label = document.createTextNode(`${pieceName} at (${piece.getX()},${piece.getY()}) ${piece.getXP()} xp `);
 

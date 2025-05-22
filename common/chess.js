@@ -94,7 +94,7 @@ const DEFAULT_LAYOUT = [
     PieceType.Rook,
 ];
 
-export const NPC_OWNER=2;
+export const NPC_OWNER = 2;
 export const BLACK_OWNER = 1;
 export const WHITE_OWNER = 0;
 
@@ -120,8 +120,20 @@ export default class State {
         return stateObject;
     }
 
+    static simpleArrayHash(array) {
+        return array.reduce((hash, arr) => ((hash << 5) - hash + arr) | 0, 0);
+    }
+
     static sum(state) {
-        return JSum.digest(state, "SHA256", "hex");
+        const numbers = state.pieces
+            .sort((a, b) =>
+                a.getOwner() - b.getOwner() ||
+                a.getType() - b.getType() ||
+                a.getY() - b.getY() ||
+                a.getX() - b.getX())
+            .flatMap(p => [p.getX(), p.getY(), p.getType()]);
+        console.log(`Currently hashing: ${numbers}`);
+        return State.simpleArrayHash(numbers);
     }
 
     // Create state from state sent across network

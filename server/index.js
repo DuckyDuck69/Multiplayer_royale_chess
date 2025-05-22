@@ -96,11 +96,11 @@ function createNewOwner(username, color) {
     const newSession = uuidv4();
 
     const owner = { username, color };
-    console.log(owner);
     owners[newId] = owner;
     sessions[newSession] = newId;
 
     state.createPiecesFor(newId);
+    stateSum = State.sum(state);
 
     io.emit("state", {
         owners,
@@ -180,21 +180,23 @@ io.on("connection", (socket) => {
         const move = Move.deserialize(data.move);
         console.log(owner, "-", move.toString());
         // TODO: validate
+        console.log(`State sum before: ${stateSum}`);
         state.makeMove(move);
         stateSum = State.sum(state);
+        console.log(`State sum after: ${stateSum}`);
 
         io.emit("move", { move: move.serialize(), sum: stateSum });
     });
-    socket.on("promote", ({ x, y, type })=>{
+    socket.on("promote", ({ x, y, type }) => {
         //get the piece information
         const piece = state.pieceAt(x, y)
-        if(piece && piece.getOwner() === owner){
+        if (piece && piece.getOwner() === owner) {
             const newPiece = piece.promoteTo(type)
-            if(newPiece){
+            if (newPiece) {
                 //update the piece on the backend side
                 state.pieces.push(newPiece)
             }
-            
+
             stateSum = State.sum(state);
 
             io.emit("state", {
@@ -202,7 +204,7 @@ io.on("connection", (socket) => {
                 owners,
                 state: state.serialize(),
                 sum: stateSum,
-              });
+            });
 
             console.log(`Promoted (${x}, ${y}) to type ${type}`);
         }
