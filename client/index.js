@@ -20,11 +20,6 @@ let owner = null;
 // Store currently active upgrade modal to prevent duplicates
 let activeUpgradeModal = null;
 
-//create NPC list and add 1 npc for testing
-const npcList = []
-
-const npcPiece1 = new NPC(PieceType.Knight, 10, 10)
-npcList.push(npcPiece1)
 
 const start = Date.now();
 

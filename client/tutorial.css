@@ -1,0 +1,61 @@
+.piece-container{
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+}
+.piece-info{
+    gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    width: 30%;
+    height: 100%;
+    overflow-y: auto;
+}
+.piece-button{
+    width: 100%;
+    height: auto;
+    margin: 0.5em;
+    padding: 1em;
+    box-sizing: border-box;
+    border: 3px solid #d58ea9;
+    border-radius: 20px;
+    background-color: beige; 
+}
+.piece-description{
+    font-size: large;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+#video-play{
+    width: 100%;
+    height: auto;
+}
+
+#buttonContainer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#maingameButton{
+    width: 20em;
+    height: 5em;
+    font-size: large;
+    background-color: rgb(101, 125, 195);
+}
+
+#tutorialContainer{
+    width: 70%;
+    height: 100%;
+    gap: 1rem;
+    object-fit: cover;
+}
+
+p{
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-size: large;
+}
+
+
+body{
+    background-color: aquamarine;
+}

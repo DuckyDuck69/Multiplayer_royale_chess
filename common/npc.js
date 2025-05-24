@@ -22,7 +22,7 @@ export default class NPC{
         console.log(piece.type)
     }
     getNpcType(){
-        return 
+        return this.type
     }
 
     updateNPC(){
