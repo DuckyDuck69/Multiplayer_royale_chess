@@ -1,9 +1,7 @@
-import JSum from "jsum";
 import Board from "./board.js";
 import Move, { CastleType, MoveType } from "./move.js";
 import Obstacle, { ObstacleType } from "./obstacle.js";
 import Piece, { PieceTags, PieceType } from "./piece.js";
-import { resourceUsage } from "process";
 
 export const COLORS = [
     "black",
@@ -132,7 +130,6 @@ export default class State {
                 a.getY() - b.getY() ||
                 a.getX() - b.getX())
             .flatMap(p => [p.getX(), p.getY(), p.getType()]);
-        console.log(`Currently hashing: ${numbers}`);
         return State.simpleArrayHash(numbers);
     }
 

@@ -28,6 +28,10 @@ npcList.push(npcPiece1)
 
 const start = Date.now();
 
+function logDateTime() {
+    return new Date().toLocaleTimeString("en-US");
+}
+
 async function init() {
     if (!localStorage.getItem("session")) {
         window.location.href = '/';
@@ -48,13 +52,15 @@ async function init() {
 
     // This will be called when the socket gets connected.
     socket.on("connect", () => {
-        console.log(`${socket.id} connected!`);
+        console.log(`${logDateTime()} :: ${socket.id} connected!`);
     });
 
     socket.on("state", (data) => {
         state = State.deserialize(data.state);
 
         stateSum = data.sum;
+        console.log(`${logDateTime()} :: recieved state (sum ${stateSum.toString(16)})`);
+
         if (data.owner) {
             owner = data.owner;
         }
@@ -93,25 +99,31 @@ async function init() {
             selected = false;
         }
 
-        console.log(`Current state sum: ${stateSum}`);
         stateSum = State.sum(state);
-        console.log(`New state sum: ${stateSum} (versus server's: ${sum})`);
+        console.log(`${logDateTime()} :: recieved move ${execMove.toString()} (sum ${sum.toString(16)}/${stateSum.toString(16)})`);
 
         if (stateSum !== sum) {
-            console.warn("client-server desync, requesting full update...");
+            console.warn(`${logDateTime()} :: client-server desync, requesting full update...`);
             socket.emit("state_request");
         }
         markPieceMenuForUpdate();
     });
 
     socket.on("owners", (data) => {
+        const prevOwnersLength = owners.length;
         owners = data;
+        if (owners.length > prevOwnersLength) {
+            console.log(`${logDateTime()} :: player connected`);
+        } else if (owners.length < prevOwnersLength) {
+            console.log(`${logDateTime()} :: player disconnected`);
+        }
     });
 }
 
 init();
 
 function makeMove(move) {
+    console.log(`${logDateTime()} :: requesting move ${move.toString()}`);
     socket.emit("move", { move: move.serialize(), sum: stateSum });
     markPieceMenuForUpdate();
 }
@@ -469,7 +481,6 @@ myCanvas.addEventListener("mousedown", function (event) {
     dragTileY = 0;
 
     needsRedraw = true;
-    console.log("mousedown");
 });
 
 function ensureCameraInBounds() {
@@ -515,20 +526,17 @@ myCanvas.addEventListener("mousewheel", (event) => {
 myCanvas.addEventListener("mouseup", function (event) {
     isDragging = false; //if the user is not clicking the board, disable the map moving function
     needsRedraw = true;
-    console.log("mouseup");
 });
 window.addEventListener("mouseup", function (event) {
     if (isDragging) {
         isDragging = false;
         needsRedraw = true;
-        console.log("global mouseup - stopped dragging");
     }
 });
 myCanvas.addEventListener("mouseleave", function (event) {
     if (isDragging) {
         isDragging = false;
         needsRedraw = true;
-        console.log("mouse left canvas - stopped dragging");
     }
 });
 myCanvas.addEventListener("click", () => {
@@ -935,14 +943,7 @@ function pieceMenu() {
         upButton.style.background = '#8922c1';
 
         upButton.addEventListener("click", (event) => {
-            console.log("Upgrade button clicked for", pieceNames[piece.type], "at", piece.getX(), piece.getY());
             try {
-                console.log("Piece properties: ", {
-                    type: piece.type,
-                    xp: piece.getXP(),
-                    promote: typeof piece.promoteTo === 'function'
-                });
-
                 upgradeMenu(piece);
             } catch (error) {
                 console.error("Error handling upgrade button click:", error);
@@ -976,7 +977,7 @@ function updateMenuState() {
         } else if (percent > 25) {
             button.style.backgroundColor = 'yellow';
         } else {
-            button.style.backgroundColor = 'green';
+            button.style.backgroundColor = 'whitwhitee';
         }
     }
 }
@@ -988,10 +989,6 @@ function upgradeMenu(piece) {
     if (activeUpgradeModal && document.body.contains(activeUpgradeModal)) {
         document.body.removeChild(activeUpgradeModal);
     }
-
-    console.log("Opening upgrade menu for:", piece);
-    console.log("Piece type:", piece.type, "XP:", piece.getXP());
-    console.log("XP_LEVEL defined:", typeof XP_LEVEL !== 'undefined');
 
     // Create modal container
     const modalContainer = document.createElement("div");
@@ -1039,11 +1036,8 @@ function upgradeMenu(piece) {
         const pieceXP = piece.getXP();
         const pieceType = piece.getType();
 
-        console.log("Processing upgrades for", pieceNames[pieceType], "with XP:", pieceXP);
-
         // Level 0 Promotions: Pawn Promotion
         if (pieceXP >= XP_LEVEL[0] && pieceType === PieceType.Pawn) {
-            console.log("Adding pawn promotion options");
             upgradeOptions.push(
                 { type: PieceType.Knight, name: "Knight" },
                 { type: PieceType.Bishop, name: "Bishop" },
@@ -1052,14 +1046,12 @@ function upgradeMenu(piece) {
         }
         // Level 1 Promotions: King
         else if (pieceXP >= XP_LEVEL[1] && pieceType === PieceType.King) {
-            console.log("Adding king promotion options");
             upgradeOptions.push(
                 { type: PieceType.Pawn, name: "Spawn Pawn" }
             );
         }
         // Level 2 Promotions: Mythical pieces
         else if (pieceXP >= XP_LEVEL[2]) {
-            console.log("Processing level 2 promotions");
             switch (pieceType) {
                 case PieceType.Knight:
                     upgradeOptions.push(
@@ -1117,7 +1109,6 @@ function upgradeMenu(piece) {
 
             // Click handler to perform the promotion
             optionButton.addEventListener("click", () => {
-                console.log("Promoting", pieceNames[piece.type], "to", option.name);
                 //update on the server side
                 socket.emit("promote", {
                     x: piece.getX(),
@@ -1136,12 +1127,6 @@ function upgradeMenu(piece) {
                 }
 
                 pieceMenu();
-
-                // Log promotion
-                console.log(`Upgraded ${pieceNames[piece.type]} at (${piece.getX()},${piece.getY()})`);
-                if (newPiece) {
-                    console.log(`Created new ${pieceNames[newPiece.type]} at (${newPiece.getX()},${newPiece.getY()})`);
-                }
             });
 
             optionsContainer.appendChild(optionButton);
