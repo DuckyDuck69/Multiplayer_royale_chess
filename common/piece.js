@@ -1,3 +1,5 @@
+import { generateRandomName } from "./names.js";
+
 // Different types of pieces in the game to determine movesets
 export const PieceType = {
     Pawn: 0,
@@ -36,6 +38,7 @@ export const PromoTree = {
 export default class Piece {
     constructor(type, x, y, owner) {
         // The type of the piece (an integer representing the PieceType above)
+        this.name = generateRandomName();
         this.type = type;
         // Position of the piece on the board (integer)
         this.x = x;
@@ -161,9 +164,19 @@ export default class Piece {
             return XP_LEVEL[2]
         }
     }
+    isUpgradeable() {
+        return (
+            this.getType() === PieceType.Pawn
+            || this.getType() == PieceType.King
+            || this.getType() == PieceType.Knight
+            || this.getType() == PieceType.Bishop
+            || this.getType() == PieceType.Rook
+        );
+    }
     promoteTo(type) {
         // Level 0 Promotions : Pawn Promotion
         if (this.getXP() >= XP_LEVEL[0] && this.getType() === PieceType.Pawn) {
+            this.xp -= XP_LEVEL[0];
             // Pawn to Knight/Bishop/Rook
             if (PromoTree[PieceType.Pawn].includes(type)) {
                 this.type = type;
@@ -171,12 +184,13 @@ export default class Piece {
             }
         }
         else if (this.getXP() >= XP_LEVEL[1] && this.getType() === PieceType.King && type === PieceType.Pawn) {
+            this.xp -= XP_LEVEL[1];
             // Level 1 Promotions : King
-            //mpreg King!!
-            console.log("king pawns out");
+            //mpreg King!! <- what ???
             return new Piece(PieceType.Pawn, this.x, this.y + 1, this.owner);
         }
         else if (this.getXP() >= XP_LEVEL[2]) {
+            this.xp -= XP_LEVEL[2];
             // Level 2 Promotions : Mythical pieces
             switch (this.getType()) {
                 // Knight to ChimeraGoat/ChimeraLion/Pegasus

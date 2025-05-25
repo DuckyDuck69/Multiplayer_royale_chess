@@ -715,6 +715,14 @@ function drawPieces() {
                 ctx.drawImage(chimeraMoveableImg, piece.x, piece.y, 1, 1);
             }
 
+            ctx.font = '0.2px sans-serif';
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'left';
+            const pieceInitials = piece.name.split(' ').map(n => n.charAt(0)).join('');
+            ctx.fillText(pieceInitials, piece.x + 0.05, piece.y + 0.95);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(pieceInitials, piece.x + 0.03, piece.y + 0.93);
+
             if (piece.getType() == PieceType.King) {
                 const name = owners[piece.owner].username;
                 ctx.font = '1px sans-serif';
@@ -865,13 +873,26 @@ function pieceMenu() {
     const menu = document.getElementById("piecesMenu");
     menu.innerHTML = "";
 
-    for (const piece of state.pieces) {
+    const myPieces = state.pieces.filter((p) => p.owner === owner)
+        .sort((a, b) => {
+            const aCanUpgrade = a.getXP() >= a.getXPLevel();
+            const bCanUpgrade = b.getXP() >= b.getXPLevel();
+            return (bCanUpgrade - aCanUpgrade) || b.cooldown - a.cooldown;
+        });
+
+    for (const piece of myPieces) {
         let pieceButton = document.createElement("button");
         pieceButton.piece = piece;
+        pieceButton.style.display = "flex";
+        pieceButton.style.flexDirection = "column";
+        pieceButton.style.gap = "4px";
 
         // Teleport to the piece's location
         pieceButton.addEventListener("click", () => {
             animateCameraTo(piece.getX() + 0.5, piece.getY() + 0.5, 8);
+            selected = true;
+            selectedX = piece.getX();
+            selectedY = piece.getY();
             needsRedraw = true;
         });
 
@@ -907,27 +928,65 @@ function pieceMenu() {
             case "builder": pieceName = "Builder";
                 break;
         }
-        const label = document.createTextNode(`${pieceName} at (${piece.getX()},${piece.getY()}) ${piece.getXP()} xp `);
+        const pieceStatsList = document.createElement("div");
+        pieceStatsList.style.display = "flex";
+        pieceStatsList.style.flexDirection = "column";
+        pieceStatsList.style.alignItems = "end";
+        pieceStatsList.style.gap = "4px";
 
-        // Cooldown percent 
-        const percent = Math.floor(piece.cooldownPercent() * 100);
-        const percentSpan = document.createElement("span");
-        percentSpan.textContent = ` ${percent}% `;
+        const labelPieceName = document.createElement("span");
+        labelPieceName.style.fontWeight = 700;
+        labelPieceName.innerText = piece.name;
+
+        pieceStatsList.appendChild(labelPieceName);
+
+        const labelType = document.createElement("span");
+        labelType.innerText = pieceName;
+
+        pieceStatsList.appendChild(labelType);
+
+        const labelCoordinates = document.createElement("span");
+        labelCoordinates.innerText = `(${piece.getX()}, ${piece.getY()})`;
+
+        pieceStatsList.appendChild(labelCoordinates);
+
+        const upgradeAvailableIcon = document.createElement("img");
+        upgradeAvailableIcon.src = "assets/textures/upgrade_available.png";
+        upgradeAvailableIcon.style.visibility = piece.isUpgradeable() && piece.getXP() >= piece.getXPLevel() ? "visible" : "hidden";
+
+        pieceStatsList.appendChild(upgradeAvailableIcon);
+
+        const xpRow = document.createElement("div");
+        xpRow.style.display = "flex";
+        xpRow.style.flexDirection = "row";
+        xpRow.style.alignItems = "center";
+        xpRow.style.gap = '4px';
+
+        const xpProgress = document.createElement("span");
+        xpProgress.innerText = piece.isUpgradeable() ? `${piece.getXP()} / ${piece.getXPLevel()}` : `MAXED`;
+
+        if (!piece.isUpgradeable() || piece.getXP() >= piece.getXPLevel()) {
+            xpProgress.style.fontWeight = 700;
+        } else {
+            xpProgress.style.fontWeight = 400;
+        }
 
         // XP bar container
         const xpBarContainer = document.createElement("div");
-        xpBarContainer.style.width = "100%";
         xpBarContainer.style.background = "#ddd";
         xpBarContainer.style.borderRadius = "4px";
-        xpBarContainer.style.marginTop = "4px";
+        xpBarContainer.style.flexGrow = 1;
 
         // XP bar fill
         const xpBar = document.createElement("div");
         xpBar.style.height = "10px";
         xpBar.style.borderRadius = "4px";
         xpBar.style.backgroundColor = "#4caf50";
-        xpBar.style.width = Math.min(100, Math.floor((piece.getXP() / piece.getXPLevel()) * 100)) + "%";
+        xpBar.style.width = !piece.isUpgradeable() ? '100%' : Math.min(100, Math.floor((piece.getXP() / piece.getXPLevel()) * 100)) + "%";
         xpBarContainer.appendChild(xpBar);
+
+        xpRow.appendChild(xpBarContainer);
+        xpRow.appendChild(xpProgress);
 
         // Upgrade button
         const upButton = document.createElement("button");
@@ -944,12 +1003,35 @@ function pieceMenu() {
             }
         });
 
+        const pieceInformationRow = document.createElement("div");
+        pieceInformationRow.style.display = "flex";
+        pieceInformationRow.style.flexDirection = "row-reverse";
+        pieceInformationRow.style.alignItems = "center";
+        pieceInformationRow.style.justifyContent = "space-between";
+
+        pieceInformationRow.appendChild(pieceStatsList);
+
+        const pieceDataRight = document.createElement("div");
+        pieceDataRight.style.display = "flex";
+        pieceDataRight.style.flexDirection = "column";
+        pieceDataRight.style.alignItems = "start";
+        pieceDataRight.style.gap = "4px";
+
+        const pieceCooldownSpan = document.createElement("span");
+        pieceCooldownSpan.classList.add("cooldown");
+        pieceCooldownSpan.innerText = "ready";
+
+        pieceDataRight.appendChild(pieceCooldownSpan);
+        pieceDataRight.appendChild(pieceIcon);
+
+        pieceInformationRow.appendChild(pieceDataRight);
+
         // Append all elements to the button
-        pieceButton.appendChild(pieceIcon);
-        pieceButton.appendChild(label);
-        pieceButton.appendChild(xpBarContainer);
-        pieceButton.appendChild(percentSpan);
-        pieceButton.appendChild(upButton);
+        pieceButton.appendChild(pieceInformationRow);
+        pieceButton.appendChild(xpRow);
+        if (piece.isUpgradeable() && piece.getXP() >= piece.getXPLevel()) {
+            pieceButton.appendChild(upButton);
+        }
 
         // Append the piece button to the menu
         menu.appendChild(pieceButton);
@@ -962,16 +1044,16 @@ function updateMenuState() {
     for (const button of menu.children) {
         const piece = button.piece;
 
-        const percentSpan = button.querySelector("span");
-        const percent = Math.floor(piece.cooldownPercent() * 100);
-        percentSpan.textContent = ` ${percent}% `;
+        const percentSpan = button.querySelector("span.cooldown");
+        const time = Math.max(piece.cooldown - Date.now(), 0) / 1000;
+        percentSpan.textContent = time <= 0 ? 'ready' : `${time.toFixed(1)}s`;
 
-        if (percent >= 75) {
-            button.style.backgroundColor = 'red';
-        } else if (percent > 25) {
-            button.style.backgroundColor = 'yellow';
+        if (time > 0) {
+            percentSpan.style.fontWeight = 700;
+            percentSpan.style.color = 'red';
         } else {
-            button.style.backgroundColor = 'whitwhitee';
+            percentSpan.style.fontWeight = 400;
+            percentSpan.style.color = 'black';
         }
     }
 }
