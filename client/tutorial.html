@@ -7,11 +7,12 @@
         <link rel="stylesheet" href="tutorial.css">
     </head>
     <body>
-        <h1>Chess Royale Tutorial</h1>
-        
+        <div class = "title">
+            <h1>Chess Royale Tutorial</h1>
+        </div>
         <div class="info-box">
             <p>Welcome to Chess Royale! This tutorial will help you learn about the special pieces and features that make this game unique. Read about the Fantasy Pieces abilities and skills down below</p>
-            <p><strong>How to play:</strong> Click on a your piece to select it, then click on a highlighted square to move. You can level up to cool pieces below!. </p>\
+            <p><strong>How to play:</strong> Click on a your piece to select it, then click on a highlighted square to move. You can level up to cool pieces below!. </p>
             <p><strong>Goal:</strong> CAPTURE YOUR OPONENTS' KING</p>
         </div>
         
@@ -20,12 +21,12 @@
         <div class="piece-container">
             <div id="tutorialContainer">
                 <video autoplay muted loop preload="metadata" id="video-play">
-                    <source id="video-source" src="./assets/video/ChessLanding1.mp4" type="video/mp4">
+                    <source id="video-source" src="./assets/video/BuilderVideo.mp4" type="video/mp4">
                     Sorry, your browser can't load the video
                 </video>
             </div>
             <div class="piece-info">
-                <button type="button" class="piece-button" data-piece="Pegasus" data-video="./assets/video/ChessLandingPageVid.mp4">
+                <button type="button" class="piece-button" data-piece="Pegasus" data-video="./assets/video/PegasusVideo.mp4">
                     <img src="assets/textures/light_pegasus.png" alt="Light Pegasus">
                     <img src="assets/textures/dark_pegasus.png"  alt="Dark Pegasus">
                     <h3>Pegasus</h3>
@@ -34,13 +35,13 @@
                     This makes it excellent for navigating through difficult terrain.
                     </p>
                 </button>
-                <button type = "button" class="piece-button" data-piece="Medusa" data-video="./assets/video/ChessLandingPageVid.mp4">
+                <button type = "button" class="piece-button" data-piece="Gorgon" data-video="./assets/video/GorgonVideo.mp4">
                     <img src="assets/textures/dark_medusa.png" alt="">
                     <img src="assets/textures/light_medusa.png" alt="">
                     <h3>Gorgon</h3>
                     <p class="piece-description">The Gorgon has limited movement (2 squares diagonally or orthogonally), but when it captures a piece, all adjacent pieces are stunned for 2 turns!</p>
                 </button>
-                <button type="button" class="piece-button" data-piece="Chimera" data-video="./assets/video/ChessLandingPageVid.mp4">
+                <button type="button" class="piece-button" data-piece="Chimera" data-video="./assets/video/ChimeraVideo.mp4">
                     <img src="assets/textures/dark_lion_chimera.png" alt="">
                     <img src="assets/textures/dark_goat_chimera.png" alt="">
                     <img src="assets/textures/light_goat_chimera.png" alt="">
@@ -48,14 +49,14 @@
                     <h3>Chimera (Lion and Goat)</h3>
                     <p class="piece-description">The Chimera Lion combines the power of the Queen with some Knight-like moves, making it an extremely versatile attacker.</p>
                 </button>
-                <button type="button" class="piece-button" data-piece="Juggernaut" data-video="./assets/video/ChessLandingPageVid.mp4">
+                <button type="button" class="piece-button" data-piece="Juggernaut" data-video="./assets/video/JuggernautVideo.mp4">
                     <img src="assets/textures/light_juggernaut.png" alt="">
                     <img src="assets/textures/dark_juggernaut.png" alt="">
                     <h3>Juggernaut</h3>
                     <p class="piece-description">The Lion moves like a Knight, while the Goat moves like a Bishop (limited to 2 squares). They must alternate turns and can move independently but stay within 5-6 tiles. When fully stretched with up to two enemy pieces between them, they snap back, capturing those pieces. If one half is captured, so is the other.
                     </p>
                 </button>
-                <button type="button" class="piece-button" data-piece="Builder">
+                <button type="button" class="piece-button" data-piece="Builder" data-video="./assets/video/BuilderVideo.mp4">
                     <img src="assets/textures/dark_builder.png" alt="">
                     <img src="assets/textures/light_builder.png" alt="">
                     <h3>Builder</h3>
