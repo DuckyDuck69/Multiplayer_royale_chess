@@ -20,11 +20,6 @@ let owner = null;
 // Store currently active upgrade modal to prevent duplicates
 let activeUpgradeModal = null;
 
-//create NPC list and add 1 npc for testing
-const npcList = []
-
-const npcPiece1 = new NPC(PieceType.Knight, 10, 10)
-npcList.push(npcPiece1)
 
 const start = Date.now();
 
@@ -670,7 +665,6 @@ function drawResources() {
         }
     }
 }
-
 function drawPieces() {
     const { left, top, right, bottom } = cameraBounds();
     for (const piece of
@@ -679,7 +673,7 @@ function drawPieces() {
         //check for pieces' coordinate
 
         //declare normal owner and npc owner
-        const ownerData = owners[piece.owner] || { color: "white", username: "NPC" };
+        const ownerData = owners[piece.owner] || { color: "white", username: "NPC_OWNER" };
         const colorIndex = COLORS.indexOf(ownerData.color) * 64;
         if (
             piece.x >= left &&
@@ -868,7 +862,7 @@ document
 //Piece Tracking Menu
 
 function pieceMenu() {
-    const menu = document.getElementById("blackPiecesMenu");
+    const menu = document.getElementById("piecesMenu");
     menu.innerHTML = "";
 
     for (const piece of state.pieces) {
@@ -883,7 +877,7 @@ function pieceMenu() {
 
         // Piece icon image
         const pieceIcon = new Image();
-        pieceIcon.src = (piece.owner === WHITE_OWNER ? whitePieceImgs : blackPieceImgs)[piece.type].src;
+        pieceIcon.src = (piece.owner === NPC_OWNER ? blackPieceImgs : whitePieceImgs)[piece.type].src;
 
         // Label of the piece
         var pieceName = pieceNames[piece.type];
@@ -964,7 +958,7 @@ function pieceMenu() {
 
 
 function updateMenuState() {
-    const menu = document.getElementById("blackPiecesMenu");
+    const menu = document.getElementById("piecesMenu");
     for (const button of menu.children) {
         const piece = button.piece;
 
