@@ -341,6 +341,7 @@ function canvasSpaceToWorldSpace(xPx, yPx) {
         y: ((yPx - myCanvas.clientHeight / 2) / myCanvas.clientHeight) * cameraZoom + cameraY,
     }
 }
+let firstWalkthroug = false;
 
 //draw the board at a consistent fps
 function renderLoop() {
@@ -365,6 +366,10 @@ function renderLoop() {
     cooldownHighLight();
     drawPieces();
     updateMenuState();
+    if(!firstWalkthroug){
+        showTutorialSteps();
+        firstWalkthroug = true;
+    }
 
     if (selected) {
         showMoves();
@@ -860,13 +865,6 @@ document
     .addEventListener("click", function () {
         restartGame();
     });
-
-document
-    .getElementById("win-screen-test")
-    .addEventListener("click", function () {
-        showWinScreen("White");
-    });
-
 //Piece Tracking Menu
 
 function pieceMenu() {
@@ -1223,5 +1221,100 @@ function upgradeMenu(piece) {
     activeUpgradeModal = modalContainer;
 }
 
+/* Dialogs*/
+const tutorialDialogs = [
+    {selector: "#zoomIn", text:"Hi, Welcome to our Fantasy Chess Game! We advise you to read through all this walkthrough before immersing in our games!", placement: 'bottom'},
+    {selector: "#zoomIn", text:"Press this to zoom in", placement: 'bottom'},
+    {selector: "#zoomOut", text:"Press this to zoom out", placement: 'bottom'},
+    {selector: "#tutorialButton", text:"You can view the detailed tutorial here", placement:'left'},
+    {selector: "#chessBoard", text:"This will be your chessboard, you can interact with it by using your mouse (and scroll wheel too!)", placement: 'right'},
+    {selector: "#piecesMenu", text:"This is the piece menu. You can track your pieces' status: XP, Cooldown Time, Teleportation)", placement:"bottom"},
+    {selector: "#guideButton", text:"You can view the quick guide here", placement:'right'},
+    {selector: "#guideButton", text:"That's it! We hope you have a great time with our game!\n (click done to exit the walkthrough)", placement:'right'}
+]
 
+let tutorialIndex = 0;
+let currentTip = null;
+let currentHighlighted = null;
+
+function clearPrevious(){
+    if(currentTip){
+        currentTip.remove();
+    }
+    if(currentHighlighted){
+        currentHighlighted.classList.remove('tutorial-highlight');
+        currentHighlighted = null;
+    }
+}
+function showTutorialSteps(){
+    console.log("function walkthrough")
+    //first, clean up all the steps
+    clearPrevious();
+    //prevent overflown
+    if (tutorialIndex >= tutorialDialogs.length) {
+        return;
+    }
+    //create the dialog
+    const {selector, text, placement} = tutorialDialogs[tutorialIndex]
+    const target = document.querySelector(selector)
+    if(!target) return console.warn("Can not display tutorial on this element:", selector)
+
+    //highlight it
+    target.classList.add('tutorial-highlight');
+    currentHighlighted = target;
+    
+    const tip = document.createElement('div')
+    tip.className = "tutorial-tip"
+    tip.innerHTML = `
+        <div class="tip-content">${text}</div>
+        <button class="next-button">${tutorialIndex === tutorialDialogs.length - 1 ? 'Done' : 'Next'}</button>
+    `
+    document.body.appendChild(tip)
+    const offHeight = tip.offsetHeight;
+    const offWidth = tip.offsetWidth;
+    currentTip = tip;
+
+    //position everything
+    let top, left;
+    const rect = target.getBoundingClientRect();  //get the numerical values (position, width, height, etc.) of the div
+    const margin = 10;
+
+    switch(placement){
+        case 'bottom':
+            //rect.top means the distance from the top of the browser's content area to the top of our element
+            top = rect.top + offHeight/1.5;
+            //get the left x value of the element, move right by half its width, and move left by half the tip's width to center it
+            left = rect.left + rect.width/2 - offWidth/2;  
+            break;
+        case 'right':
+            top = rect.top + rect.height/2;
+            left = rect.left + rect.width + margin;
+            break;
+        case 'left':
+            top = rect.top ;
+            left = rect.left - offWidth;
+            break;
+        default:
+            top = rect.top;
+            left = rect.left;
+    }
+    // apply (clamp to viewport)
+    tip.style.top  = `${Math.max(10, top + window.scrollY)}px`;
+    tip.style.left = `${Math.max(10, left + window.scrollX)}px`;
+    requestAnimationFrame(() => tip.classList.add('show'));  //show the highlight
+
+    tip.querySelector('.next-button').addEventListener('click', ()=>{
+        tutorialIndex += 1;
+        showTutorialSteps();
+    });
+}
+
+document.getElementById("dialogButton").addEventListener('click', ()=>{
+    console.log('button clicked')
+    tutorialIndex = 0;
+    showTutorialSteps();
+})
+
+console.log("bottom file")
+//always put everything before this renderLoop()
 renderLoop();
