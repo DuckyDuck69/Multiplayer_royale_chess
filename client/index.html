@@ -6,13 +6,14 @@
         <!--<meta http-equiv="X-UA-Compatible" content="ie=edge">-->
         <title>Chess Royale</title>
         <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap" rel="stylesheet"/>
         <link rel="stylesheet" href="index.css">
     </head>
     <body>
         <div class="bg-image"></div>
         <div class = "gameLayout">
             <div class="info-box">
-                <h2>Pieces Menu</h2>
+                <h2 id="menu-title">Pieces Menu</h2>
                 <div id="piecesMenu"></div>
             </div>
             <div class = "game-container" >
@@ -36,6 +37,12 @@
                     <button id="guideButton">Game Guide</button>
                 </div>
             </div>
+            <!-- Dialog Container -->
+            <div id="dialogContainer" class="dialog-container"></div>
+
+            <!-- Dialog Trigger Button -->
+            <button id="dialogButton" class="dialog-button">Walk Through</button>
+
         </div>    
         <div id="upgrade-menu" class="hidden">
             <div id="upgrade-options"></div>
@@ -132,6 +139,14 @@
                         <div class="piece-card">
                             <h3>Mud</h3>
                             <p>When a piece lands on mud, it must stop its movement. On the next turn, it can move normally. The Juggernaut can move through mud without stopping.</p>
+                        </div>
+                        <div class="piece-card">
+                            <h3>River</h3>
+                            <p>Slow down your pieces</p>
+                        </div>
+                        <div class="piece-card">
+                            <h3>Grass</h3>
+                            <p>Hide your pieces</p>
                         </div>
                     </div>
                 </div>

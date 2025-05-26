@@ -81,27 +81,38 @@ body {
     transform: scale(1.1);
 }
 
-#tutorialButton,
-#guideButton {
-    font-size: 30px;
-    font-family: Arial, Helvetica, sans-serif;
-    font-weight: bold;
-    background-color: #d4e08e;
-    color: royalblue;
+#buttonContainer, #guideButtonContainer {
+    display: inline-block;
+    padding: 5px;
+    border-radius: 10px;
+    transition: box-shadow 0.3s ease;
+  }
+  
+  #buttonContainer:hover,
+  #guideButtonContainer:hover {
+    box-shadow: 0 0 12px rgba(0, 128, 128, 0.5); /* Teal glow */
+  }
+ 
+  
+  #tutorialButton, #guideButton {
+    width: auto;
+    height: 4em;
+    padding: 10px 24px;
+    background-color: teal;
+    color: rgb(29, 26, 16);
     border: none;
-    border-radius: 12px;
-    padding: 10px 20px;
-    width: 300px;
-    height: 70px;
+    border-radius: 8px;
+    font-size: 10vh;
+    font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-#tutorialButton:hover,
-#guideButton:hover {
-    transform: scale(1.1);
-}
+    transition: transform 0.2s ease;
+  }
+  
+  #buttonContainer:hover #tutorialButton,
+  #guideButtonContainer:hover #guideButton {
+    transform: scale(1.03);
+  }
+  
 
 #piecesMenu button {
     border-radius: 12px;
@@ -423,3 +434,141 @@ p {
     max-width: 1400px;
     padding-top: 20px;
 }
+#menu-title{
+    margin-top: 5%;
+}
+
+/*tutorial dialogs*/
+
+.next-button{
+    margin-top: 20%;
+    border-radius: 6px;
+    border-color: #b75a6a;
+    background-color: antiquewhite;
+    font-size: medium;
+}
+.tutorial-tip {
+    position: absolute;
+    width: 20rem;
+    max-width: 90vw;
+    height: auto;
+    white-space: normal;
+    background: #a0c6d2;
+    border-radius: 6px;
+    border-color: #b75a6a;
+    padding: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-size: 14px;
+    z-index: 1100;
+    font-size: large;
+
+    display: flex;
+    flex-direction: column;       
+    justify-content: center;     
+    align-items: center; 
+  }
+
+  .tutorial-tip .tip-content {
+    text-align: center;      
+    margin-bottom: 12px;        
+  }
+  
+.tutorial-tip .next-button:hover {
+background: #fdc4cd;
+}
+  
+  /* a glowing pulse around the target */
+.tutorial-highlight {
+    position: relative;            /* shadow hugs the element */
+    z-index: 1001;                 /* above most things but below the tooltip */
+    animation: pulse 1.2s infinite alternate ease-in-out;
+  }
+  
+  /* the pulses of glow */
+  @keyframes pulse {
+    from {
+      box-shadow:
+        0 0 0 2px rgba(255,255,0,0.5),
+        0 0 8px 4px rgba(255,255,0,0.3);
+    }
+    to {
+      box-shadow:
+        0 0 0 8px rgba(255,255,0,0.8),
+        0 0 16px 8px rgba(255,255,0,0.5);
+    }
+  }
+
+  #dialogButton{
+    border-color: #5a7dbe;
+    border-radius: 10px;
+    font-size: large;
+    font-family: 'Times New Roman', Times, serif;
+    background-color: #d4e08e;
+  }
+  #buttonContainer,
+#guideButtonContainer {
+  background-color: rgb(130, 227, 225) !important;
+  color: #1d1a10;          /* your dark text color */
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+}
+
+/* Pulsing gradient border around the two wrappers*/
+   #buttonContainer,
+   #guideButtonContainer {
+     /* Gradient border + “breathing” glow */
+     padding: 0.5rem;            
+     border-radius: 12px;       
+     background-clip: padding-box;
+     border: 4px solid transparent;
+     background-image:
+       linear-gradient(#0a1221, #0a1221),
+       linear-gradient(45deg, #d58ea9, #5a7dbe);
+     background-origin: padding-box, border-box;
+     background-clip: padding-box, border-box;
+     animation: pulseBorder 3s ease-in-out infinite;
+     z-index: 50;                 /* above the board */
+   }
+   
+   /* Hover lift */
+   #buttonContainer:hover,
+   #guideButtonContainer:hover {
+     transform: translateY(-2px);
+   }
+   
+   /* Pulse keyframes */
+   @keyframes pulseBorder {
+     0%,100% {
+       box-shadow:
+         0 0 6px rgba(213,142,169,0.5),
+         0 0 6px rgba( 90,125,190,0.5);
+     }
+     50% {
+       box-shadow:
+         0 0 18px rgba(213,142,169,0.8),
+         0 0 18px rgba( 90,125,190,0.8);
+     }
+   }
+   
+   /* Restore their original absolute positions */
+   #buttonContainer {
+     position: absolute;
+     top: 20px;
+     right: 20px;
+     color: aliceblue;
+   }
+   
+   #guideButtonContainer {
+     position: absolute;
+     top: 20px;
+     left: 20px;
+     color: aliceblue;
+   }
+
+   #tutorialButton,
+   #guideButton {
+     color: #ffffff;
+   }
+   
