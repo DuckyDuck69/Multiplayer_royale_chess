@@ -13,7 +13,7 @@
         <div class="bg-image"></div>
         <div class = "gameLayout">
             <div class="info-box">
-                <h2 id="menu-title">Pieces Menu</h2>
+                <div id="menu-title-container"><h2 id="menu-title">Pieces Menu</h2></div>
                 <div id="piecesMenu"></div>
             </div>
             <div class = "game-container" >
@@ -55,100 +55,139 @@
                 <span class="close-button">&times;</span>
                 <h1>Chess Royale Quick Reference</h1>
                 
-                <div class="info-box">
-                    <h2>Fantasy Pieces</h2>
-                    <div class="piece-info">
-                        <div class="piece-card">
-                            <h3>Pegasus</h3>
-                            <div class="piece-images">
-                                <img src="assets/textures/light_pegasus.png" alt="Light Pegasus">
-                                <img src="assets/textures/dark_pegasus.png" alt="Dark Pegasus">
+                <div class="guide-sections">
+                    <section class="guide-section">
+                        <h2>Fantasy Pieces</h2>
+                        <div class="piece-info">
+                            <div class="piece-card">
+                                <h3>Pegasus</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/light_pegasus.png" alt="Light Pegasus">
+                                </div>
+                                <p>Moves like a Knight but can jump over obstacles like walls. Excellent for navigating difficult terrain.</p>
                             </div>
-                            <p>Moves like a Knight but can jump over obstacles like walls. Excellent for navigating difficult terrain.</p>
-                        </div>
-                        <div class="piece-card">
-                            <h3>Gorgon</h3>
-                            <div class="piece-images">
-                                <img src="assets/textures/light_medusa.png" alt="Light Gorgon">
-                                <img src="assets/textures/dark_medusa.png" alt="Dark Gorgon">
+                            <div class="piece-card">
+                                <h3>Gorgon</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/light_medusa.png" alt="Light Gorgon">
+                                </div>
+                                <p>Moves 2 squares diagonally or orthogonally. When it captures, all adjacent pieces are stunned for 2 turns!</p>
                             </div>
-                            <p>Moves 2 squares diagonally or orthogonally. When it captures, all adjacent pieces are stunned for 2 turns!</p>
-                        </div>
-                        <div class="piece-card">
-                            <h3>Chimera</h3>
-                            <div class="piece-images">
-                                <img src="assets/textures/dark_lion_chimera.png" alt="Dark Lion Chimera">
-                                <img src="assets/textures/dark_goat_chimera.png" alt="Dark Goat Chimera">
-                                <img src="assets/textures/light_goat_chimera.png" alt="Light Goat Chimera">
-                                <img src="assets/textures/light_lion_chimera.png" alt="Light Lion Chimera">
+                            <div class="piece-card">
+                                <h3>Chimera</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/light_goat_chimera.png" alt="Light Goat Chimera">
+                                    <img src="assets/textures/light_lion_chimera.png" alt="Light Lion Chimera">
+                                </div>
+                                <p>Lion: Combines Queen with Knight-like moves. Goat: Moves like Bishop (2 squares). Must alternate turns. Can capture pieces between them when fully stretched.</p>
                             </div>
-                            <p>Lion: Combines Queen with Knight-like moves. Goat: Moves like Bishop (2 squares). Must alternate turns. Can capture pieces between them when fully stretched.</p>
-                        </div>
-                        <div class="piece-card">
-                            <h3>Juggernaut</h3>
-                            <div class="piece-images">
-                                <img src="assets/textures/light_juggernaut.png" alt="Light Juggernaut">
-                                <img src="assets/textures/dark_juggernaut.png" alt="Dark Juggernaut">
+                            <div class="piece-card">
+                                <h3>Juggernaut</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/light_juggernaut.png" alt="Light Juggernaut">
+                                </div>
+                                <p>Can break through walls and move through mud without stopping. Gains strength with each capture.</p>
                             </div>
-                            <p>Can break through walls and move through mud without stopping.</p>
-                        </div>
-                        <div class="piece-card">
-                            <h3>Builder</h3>
-                            <div class="piece-images">
-                                <img src="assets/textures/dark_builder.png" alt="Dark Builder">
-                                <img src="assets/textures/light_builder.png" alt="Light Builder">
+                            <div class="piece-card">
+                                <h3>Builder</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/light_builder.png" alt="Light Builder">
+                                </div>
+                                <p>Can create and remove walls. Move the Builder, then click on an empty square to place a wall or on an existing wall to remove it.</p>
                             </div>
-                            <p>Can create and remove walls. Move the Builder, then click on an empty square to place a wall or on an existing wall to remove it.</p>
                         </div>
-                    </div>
+                    </section>
 
-                    <h2>Traditional Chess Pieces</h2>
-                    <div class="piece-info">
-                        <div class="piece-card">
-                            <h3>King</h3>
-                            <p>Moves one square in any direction. If captured, you lose the game.</p>
+                    <section class="guide-section">
+                        <h2>Traditional Pieces</h2>
+                        <div class="piece-info">
+                            <div class="piece-card">
+                                <h3>King</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/light_king.png" alt="Light King">
+                                </div>
+                                <p>Moves one square in any direction. If captured, you lose the game. Can spawn pawns when upgraded.</p>
+                            </div>
+                            <div class="piece-card">
+                                <h3>Queen</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/light_queen.png" alt="Light Queen">
+                                </div>
+                                <p>Moves any number of squares diagonally, horizontally, or vertically.</p>
+                            </div>
+                            <div class="piece-card">
+                                <h3>Bishop</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/light_bishop.png" alt="Light Bishop">
+                                </div>
+                                <p>Moves any number of squares diagonally. Can upgrade to Gorgon.</p>
+                            </div>
+                            <div class="piece-card">
+                                <h3>Knight</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/light_knight.png" alt="Light Knight">
+                                </div>
+                                <p>Moves in an L-shape: two squares in one direction, then one square perpendicular. Can upgrade to Pegasus or Chimera.</p>
+                            </div>
+                            <div class="piece-card">
+                                <h3>Rook</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/light_rook.png" alt="Light Rook">
+                                </div>
+                                <p>Moves any number of squares horizontally or vertically. Can upgrade to Juggernaut or Builder.</p>
+                            </div>
+                            <div class="piece-card">
+                                <h3>Pawn</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/light_pawn.png" alt="Light Pawn">
+                                </div>
+                                <p>Moves forward one square (or two on first move). Captures diagonally. Can upgrade to Knight, Bishop, or Rook.</p>
+                            </div>
                         </div>
-                        <div class="piece-card">
-                            <h3>Queen</h3>
-                            <p>Moves any number of squares diagonally, horizontally, or vertically.</p>
-                        </div>
-                        <div class="piece-card">
-                            <h3>Bishop</h3>
-                            <p>Moves any number of squares diagonally.</p>
-                        </div>
-                        <div class="piece-card">
-                            <h3>Knight</h3>
-                            <p>Moves in an L-shape: two squares in one direction, then one square perpendicular.</p>
-                        </div>
-                        <div class="piece-card">
-                            <h3>Rook</h3>
-                            <p>Moves any number of squares horizontally or vertically.</p>
-                        </div>
-                        <div class="piece-card">
-                            <h3>Pawn</h3>
-                            <p>Moves forward one square (or two on first move). Captures diagonally.</p>
-                        </div>
-                    </div>
+                    </section>
 
-                    <h2>Obstacles</h2>
-                    <div class="piece-info">
-                        <div class="piece-card">
-                            <h3>Walls</h3>
-                            <p>Block movement for most pieces. Only the Pegasus can jump over them, and the Juggernaut can break through them.</p>
+                    <section class="guide-section">
+                        <h2>Terrain & Resources</h2>
+                        <div class="piece-info">
+                            <div class="piece-card">
+                                <h3>Walls</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/obstacle_mountain.png" alt="Wall">
+                                </div>
+                                <p>Block movement for most pieces. Only the Pegasus can jump over them, and the Juggernaut can break through them.</p>
+                            </div>
+                            <div class="piece-card">
+                                <h3>Mud</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/obstacle_mud.png" alt="Mud">
+                                </div>
+                                <p>When a piece lands on mud, it must stop its movement. On the next turn, it can move normally. The Juggernaut can move through mud without stopping.</p>
+                            </div>
+                            <div class="piece-card">
+                                <h3>Water</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/obstacle_water.png" alt="Water">
+                                </div>
+                                <p>Slows down pieces that move through it.</p>
+                            </div>
+                            <div class="piece-card">
+                                <h3>Grass</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/obstacle_grass.png" alt="Grass">
+                                </div>
+                                <p>Hides pieces from enemy view. Pieces in grass cannot be seen by the opponent.</p>
+                            </div>
+                            <div class="piece-card">
+                                <h3>Resources</h3>
+                                <div class="piece-images">
+                                    <img src="assets/textures/resource_1.png" alt="Resource 1">
+                                    <img src="assets/textures/resource_2.png" alt="Resource 2">
+                                    <img src="assets/textures/resource_5.png" alt="Resource 5">
+                                </div>
+                                <p>Collect resources to gain XP for your pieces. More resources = more XP. Pieces can upgrade when they have enough XP.</p>
+                            </div>
                         </div>
-                        <div class="piece-card">
-                            <h3>Mud</h3>
-                            <p>When a piece lands on mud, it must stop its movement. On the next turn, it can move normally. The Juggernaut can move through mud without stopping.</p>
-                        </div>
-                        <div class="piece-card">
-                            <h3>River</h3>
-                            <p>Slow down your pieces</p>
-                        </div>
-                        <div class="piece-card">
-                            <h3>Grass</h3>
-                            <p>Hide your pieces</p>
-                        </div>
-                    </div>
+                    </section>
                 </div>
             </div>
         </div>

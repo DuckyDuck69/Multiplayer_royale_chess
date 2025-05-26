@@ -1267,7 +1267,10 @@ function showTutorialSteps(){
     tip.className = "tutorial-tip"
     tip.innerHTML = `
         <div class="tip-content">${text}</div>
-        <button class="next-button">${tutorialIndex === tutorialDialogs.length - 1 ? 'Done' : 'Next'}</button>
+        <div class="tutorial-buttons">
+            <button class="next-button">${tutorialIndex === tutorialDialogs.length - 1 ? 'Done' : 'Next'}</button>
+            <button class="skip-button">Skip Walkthrough</button>
+        </div>
     `
     document.body.appendChild(tip)
     const offHeight = tip.offsetHeight;
@@ -1291,7 +1294,7 @@ function showTutorialSteps(){
             left = rect.left + rect.width + margin;
             break;
         case 'left':
-            top = rect.top ;
+            top = rect.top;
             left = rect.left - offWidth;
             break;
         default:
@@ -1306,6 +1309,11 @@ function showTutorialSteps(){
     tip.querySelector('.next-button').addEventListener('click', ()=>{
         tutorialIndex += 1;
         showTutorialSteps();
+    });
+
+    tip.querySelector('.skip-button').addEventListener('click', ()=>{
+        clearPrevious();
+        tutorialIndex = tutorialDialogs.length;
     });
 }
 

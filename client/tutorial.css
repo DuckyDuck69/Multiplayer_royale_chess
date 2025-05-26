@@ -29,6 +29,10 @@
     background-color: navajowhite;
     border-radius: 12px;  
 }
+.piece-button:hover{
+    transform: scale(1.02);
+    transition: transform 0.3s ease;
+}
 .piece-description{
     font-size: large;
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
