@@ -173,48 +173,79 @@ const blackPieceImgs = pieceNames
 function createPieceImageAtlas() {
     const PIECE_SIZE = 64;
     const offscreenCanvas = document.createElement("canvas");
+    const offscreenAntimask = document.createElement("canvas");
+    const offscreenMask = document.createElement("canvas");
+
+    const maskWidth = pieceNames.length * PIECE_SIZE;
+    const maskHeight = PIECE_SIZE;
+
+    offscreenMask.width = maskWidth;
+    offscreenMask.height = maskHeight;
+
+    offscreenAntimask.width = maskWidth;
+    offscreenAntimask.height = maskHeight;
+
+    const maskctx = offscreenMask.getContext("2d");
+    const amaskctx = offscreenAntimask.getContext("2d");
+    maskctx.imageSmoothingEnabled = false;
+    amaskctx.imageSmoothingEnabled = false;
+    for (let x = 0; x < pieceNames.length; x += 1) {
+        const src = whitePieceImgs[x];
+        maskctx.drawImage(src, x * PIECE_SIZE, 0, PIECE_SIZE, PIECE_SIZE);
+        amaskctx.drawImage(src, x * PIECE_SIZE, 0, PIECE_SIZE, PIECE_SIZE);
+    }
+
+    const maskImageData = maskctx.getImageData(0, 0, maskWidth, maskHeight);
+    const antimaskImageData = amaskctx.getImageData(0, 0, maskWidth, maskHeight);
+    for (let y = 0; y < maskHeight; y += 1) {
+        for (let x = 0; x < maskWidth; x += 1) {
+            const index = (y * maskWidth + x) * 4;
+
+            const isMaskPixel = maskImageData.data[index] < 127 && maskImageData.data[index + 1] > 127 && maskImageData.data[index + 2] < 127;
+            if (isMaskPixel) {
+                maskImageData.data[index] = 0;
+                maskImageData.data[index + 1] = 0;
+                maskImageData.data[index + 2] = 0;
+                maskImageData.data[index + 3] = 0;
+
+                // Remove antimask pixel
+                antimaskImageData.data[index] = 0;
+                antimaskImageData.data[index + 1] = 0;
+                antimaskImageData.data[index + 2] = 0;
+                antimaskImageData.data[index + 3] = 0;
+            } else {
+                maskImageData.data[index] = 255;
+                maskImageData.data[index + 1] = 255;
+                maskImageData.data[index + 2] = 255;
+                maskImageData.data[index + 3] = 255;
+            }
+        }
+    }
+
+    maskctx.putImageData(maskImageData, 0, 0);
+    amaskctx.putImageData(antimaskImageData, 0, 0);
 
     offscreenCanvas.width = pieceNames.length * PIECE_SIZE;
     offscreenCanvas.height = COLORS.length * PIECE_SIZE;
     const octx = offscreenCanvas.getContext('2d');
 
-    for (let y = 0; y < COLORS.length; y += 1) {
-        for (let x = 0; x < pieceNames.length; x += 1) {
-            const src = (y === 0 ? blackPieceImgs[x] : whitePieceImgs[x]);
-
-            octx.drawImage(src, x * PIECE_SIZE, y * PIECE_SIZE, PIECE_SIZE, PIECE_SIZE);
-        }
-    }
-
-    const imageData = octx.getImageData(0, 0, pieceNames.length * PIECE_SIZE, COLORS.length * PIECE_SIZE);
+    octx.save();
 
     for (let y = 0; y < COLORS.length; y += 1) {
         const color = COLOR_VALUES[y] || COLOR_VALUES[0];
-        for (let x = 0; x < pieceNames.length; x += 1) {
-
-            for (let yy = y * PIECE_SIZE; yy < (y + 1) * PIECE_SIZE; yy += 1) {
-                for (let xx = 0; xx < imageData.width; xx += 1) {
-                    const i = yy + xx;
-                    const index = (yy * imageData.width + xx) * 4;
-
-                    const value = imageData.data[index] + imageData.data[index + 1] + imageData.data[index + 2];
-                    if (value < 384) {
-                        imageData.data[index] = 0;
-                        imageData.data[index + 1] = 0;
-                        imageData.data[index + 2] = 0;
-                    } else {
-                        imageData.data[index] = color[0] === 0 ? 0 : (i % color[0] === 0 ? 255 : 0);
-                        imageData.data[index + 1] = color[1] === 0 ? 0 : (i % color[1] === 0 ? 255 : 0);
-                        imageData.data[index + 2] = color[2] === 0 ? 0 : (i % color[2] === 0 ? 255 : 0);
-                    }
-
-                }
-            }
-        }
+        octx.fillStyle = `rgb(${color[0]} ${color[1]} ${color[2]})`;
+        octx.fillRect(0, y * PIECE_SIZE, offscreenCanvas.width, PIECE_SIZE);
     }
 
-    octx.putImageData(imageData, 0, 0);
+    octx.globalCompositeOperation = "destination-out";
+    for (let y = 0; y < COLORS.length; y += 1) {
+        octx.drawImage(offscreenMask, 0, y * PIECE_SIZE);
+    }
+    octx.restore();
 
+    for (let y = 0; y < COLORS.length; y += 1) {
+        octx.drawImage(offscreenAntimask, 0, y * PIECE_SIZE);
+    }
     return offscreenCanvas;
 }
 
@@ -366,7 +397,7 @@ function renderLoop() {
     cooldownHighLight();
     drawPieces();
     updateMenuState();
-    if(!firstWalkthroug){
+    if (!firstWalkthroug) {
         showTutorialSteps();
         firstWalkthroug = true;
     }
@@ -873,8 +904,8 @@ function pieceMenu() {
 
     const myPieces = state.pieces.filter((p) => p.owner === owner)
         .sort((a, b) => {
-            const aCanUpgrade = a.getXP() >= a.getXPLevel();
-            const bCanUpgrade = b.getXP() >= b.getXPLevel();
+            const aCanUpgrade = a.getXP() >= a.getXPLevel() && a.isUpgradeable();
+            const bCanUpgrade = b.getXP() >= b.getXPLevel() && b.isUpgradeable();
             return (bCanUpgrade - aCanUpgrade) || b.cooldown - a.cooldown;
         });
 
@@ -1223,30 +1254,30 @@ function upgradeMenu(piece) {
 
 /* Dialogs*/
 const tutorialDialogs = [
-    {selector: "#zoomIn", text:"Hi, Welcome to our Fantasy Chess Game! We advise you to read through all this walkthrough before immersing in our games!", placement: 'bottom'},
-    {selector: "#zoomIn", text:"Press this to zoom in", placement: 'bottom'},
-    {selector: "#zoomOut", text:"Press this to zoom out", placement: 'bottom'},
-    {selector: "#tutorialButton", text:"You can view the detailed tutorial here", placement:'left'},
-    {selector: "#chessBoard", text:"This will be your chessboard, you can interact with it by using your mouse (and scroll wheel too!)", placement: 'right'},
-    {selector: "#piecesMenu", text:"This is the piece menu. You can track your pieces' status: XP, Cooldown Time, Teleportation)", placement:"bottom"},
-    {selector: "#guideButton", text:"You can view the quick guide here", placement:'right'},
-    {selector: "#guideButton", text:"That's it! We hope you have a great time with our game!\n (click done to exit the walkthrough)", placement:'right'}
+    { selector: "#zoomIn", text: "Hi, Welcome to our Fantasy Chess Game! We advise you to read through all this walkthrough before immersing in our games!", placement: 'bottom' },
+    { selector: "#zoomIn", text: "Press this to zoom in", placement: 'bottom' },
+    { selector: "#zoomOut", text: "Press this to zoom out", placement: 'bottom' },
+    { selector: "#tutorialButton", text: "You can view the detailed tutorial here", placement: 'left' },
+    { selector: "#chessBoard", text: "This will be your chessboard, you can interact with it by using your mouse (and scroll wheel too!)", placement: 'right' },
+    { selector: "#piecesMenu", text: "This is the piece menu. You can track your pieces' status: XP, Cooldown Time, Teleportation)", placement: "bottom" },
+    { selector: "#guideButton", text: "You can view the quick guide here", placement: 'right' },
+    { selector: "#guideButton", text: "That's it! We hope you have a great time with our game!\n (click done to exit the walkthrough)", placement: 'right' }
 ]
 
 let tutorialIndex = 0;
 let currentTip = null;
 let currentHighlighted = null;
 
-function clearPrevious(){
-    if(currentTip){
+function clearPrevious() {
+    if (currentTip) {
         currentTip.remove();
     }
-    if(currentHighlighted){
+    if (currentHighlighted) {
         currentHighlighted.classList.remove('tutorial-highlight');
         currentHighlighted = null;
     }
 }
-function showTutorialSteps(){
+function showTutorialSteps() {
     console.log("function walkthrough")
     //first, clean up all the steps
     clearPrevious();
@@ -1255,14 +1286,14 @@ function showTutorialSteps(){
         return;
     }
     //create the dialog
-    const {selector, text, placement} = tutorialDialogs[tutorialIndex]
+    const { selector, text, placement } = tutorialDialogs[tutorialIndex]
     const target = document.querySelector(selector)
-    if(!target) return console.warn("Can not display tutorial on this element:", selector)
+    if (!target) return console.warn("Can not display tutorial on this element:", selector)
 
     //highlight it
     target.classList.add('tutorial-highlight');
     currentHighlighted = target;
-    
+
     const tip = document.createElement('div')
     tip.className = "tutorial-tip"
     tip.innerHTML = `
@@ -1282,15 +1313,15 @@ function showTutorialSteps(){
     const rect = target.getBoundingClientRect();  //get the numerical values (position, width, height, etc.) of the div
     const margin = 10;
 
-    switch(placement){
+    switch (placement) {
         case 'bottom':
             //rect.top means the distance from the top of the browser's content area to the top of our element
-            top = rect.top + offHeight/1.5;
+            top = rect.top + offHeight / 1.5;
             //get the left x value of the element, move right by half its width, and move left by half the tip's width to center it
-            left = rect.left + rect.width/2 - offWidth/2;  
+            left = rect.left + rect.width / 2 - offWidth / 2;
             break;
         case 'right':
-            top = rect.top + rect.height/2;
+            top = rect.top + rect.height / 2;
             left = rect.left + rect.width + margin;
             break;
         case 'left':
@@ -1302,22 +1333,22 @@ function showTutorialSteps(){
             left = rect.left;
     }
     // apply (clamp to viewport)
-    tip.style.top  = `${Math.max(10, top + window.scrollY)}px`;
+    tip.style.top = `${Math.max(10, top + window.scrollY)}px`;
     tip.style.left = `${Math.max(10, left + window.scrollX)}px`;
     requestAnimationFrame(() => tip.classList.add('show'));  //show the highlight
 
-    tip.querySelector('.next-button').addEventListener('click', ()=>{
+    tip.querySelector('.next-button').addEventListener('click', () => {
         tutorialIndex += 1;
         showTutorialSteps();
     });
 
-    tip.querySelector('.skip-button').addEventListener('click', ()=>{
+    tip.querySelector('.skip-button').addEventListener('click', () => {
         clearPrevious();
         tutorialIndex = tutorialDialogs.length;
     });
 }
 
-document.getElementById("dialogButton").addEventListener('click', ()=>{
+document.getElementById("dialogButton").addEventListener('click', () => {
     console.log('button clicked')
     tutorialIndex = 0;
     showTutorialSteps();
