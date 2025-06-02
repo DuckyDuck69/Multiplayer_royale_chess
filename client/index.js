@@ -82,7 +82,7 @@ async function init() {
 
         //const npcPiece = new Piece(PieceType.Pawn, 10, 10, NPC_OWNER);
         const npcPiece = new NPC(5,5,state);
-        state.pieces.push(npcPiece);
+        //state.pieces.push(npcPiece);
 
     });
 
