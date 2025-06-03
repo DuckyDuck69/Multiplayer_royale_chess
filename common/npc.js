@@ -1,29 +1,29 @@
 import Move from "./move";
-import State from "./chess";
+import State, { NPC_OWNER } from "./chess";
+import Piece, { PieceType } from "./piece";
 
-
-export default class NPC{
+export default class NPC extends Piece {
     static moveDirection = [
         [0, 1], //down
         [1, 0], //right
         [0, -1],//up
         [-1, 0] //left
     ];
-    constructor( type, x, y, state = State, moveDirection = NPC.moveDirection){
-        this.type = type
-        this.x = x
-        this.y = y
+    constructor(x, y, state = State, moveDirection = NPC.moveDirection){
+        super(PieceType.Pawn,x,y,NPC_OWNER)
+        this.name = "The Wanderer"
+
         this.state = state
         this.moveDirection = moveDirection  //pass the direction array 
     }
 
-    addNPC(piece){
+    /*addNPC(piece){
         this.npcs.push(piece);
         console.log(piece.type)
     }
     getNpcType(){
         return this.type
-    }
+    }*/
 
     updateNPC(){
         let dx, dy, newX, newY
@@ -44,7 +44,7 @@ export default class NPC{
                 valid = true
             }
         }
-        console.log("hahahaha")
+        console.log("NPC moved")
         if(move){
             this.state.makeMove(move);  //move the piece
         }

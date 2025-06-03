@@ -48,7 +48,6 @@ let owner = null;
 // Store currently active upgrade modal to prevent duplicates
 let activeUpgradeModal = null;
 
-
 const start = Date.now();
 
 function logDateTime() {
@@ -108,6 +107,11 @@ async function init() {
             createGrid();
         }
         markPieceMenuForUpdate();
+
+        //const npcPiece = new Piece(PieceType.Pawn, 10, 10, NPC_OWNER);
+        const npcPiece = new NPC(5,5,state);
+        //state.pieces.push(npcPiece);
+
     });
 
     socket.on("move", (data) => {
