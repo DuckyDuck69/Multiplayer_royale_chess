@@ -13,6 +13,34 @@ import Move from "../common/move";
 import { XP_LEVEL } from "../common/piece";
 import NPC from "../common/npc";
 
+// Audio Manager for handling game sound effects
+class AudioManager {
+    constructor() {
+        this.sounds = {
+            move: new Audio('assets/sfx/move-self.mp3'),
+            capture: new Audio('assets/sfx/capture.mp3'),
+            promote: new Audio('assets/sfx/promote.mp3'),
+            castle: new Audio('assets/sfx/castle.mp3'),
+            check: new Audio('assets/sfx/move-check.mp3')
+        };
+        
+        // Set volume for all sounds
+        Object.values(this.sounds).forEach(sound => {
+            sound.volume = 0.5;
+        });
+    }
+
+    play(soundName) {
+        if (this.sounds[soundName]) {
+            // Clone the audio to allow overlapping sounds
+            const sound = this.sounds[soundName].cloneNode();
+            sound.play().catch(error => console.log('Audio play failed:', error));
+        }
+    }
+}
+
+const audioManager = new AudioManager();
+
 let state = new State(160, 160);
 let owners = {};
 let socket, stateSum;
@@ -579,9 +607,14 @@ myCanvas.addEventListener("click", () => {
         );
 
         if (requestedMove) {
-            // state.makeMove(requestedMove);
+            // Check if this is a capture move
+            const targetPiece = state.pieceAt(mouseTileX, mouseTileY);
+            if (targetPiece) {
+                audioManager.play('capture');
+            } else {
+                audioManager.play('move');
+            }
             makeMove(requestedMove);
-
             markPieceMenuForUpdate();
         }
 
@@ -592,11 +625,9 @@ myCanvas.addEventListener("click", () => {
             selected = true;
             selectedX = mouseTileX;
             selectedY = mouseTileY;
-
             markPieceMenuForUpdate();
         }
     }
-
 
     if (selected) {
         showMoves();
@@ -1214,6 +1245,7 @@ function upgradeMenu(piece) {
 
             // Click handler to perform the promotion
             optionButton.addEventListener("click", () => {
+                audioManager.play('promote');
                 //update on the server side
                 socket.emit("promote", {
                     x: piece.getX(),
